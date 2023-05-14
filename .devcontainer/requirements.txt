@@ -1,0 +1,8 @@
+python-dotenv
+slack_bolt
+langchain
+openai
+pytest
+pre-commit
+black
+flake8
