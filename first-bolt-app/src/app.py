@@ -27,7 +27,7 @@ from langchain.prompts.chat import (
 load_dotenv()
 
 # ボットトークンとソケットモードハンドラーを使ってアプリを初期化します
-app = App(token=os.environ.get("SLACK_BOT_TOKEN")) 
+app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 # モデル作成
 llm = ChatOpenAI(temperature=0, openai_api_key=os.environ.get("OPEN_API_KEY"))

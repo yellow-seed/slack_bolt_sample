@@ -1,1 +1,2 @@
-/.env
+./first-bolt-app/.env
+./first-bolt-app/src/__pycache__/*
