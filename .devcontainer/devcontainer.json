@@ -48,7 +48,8 @@
 
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
-				"ms-python.python"
+				"ms-python.python",
+				"ms-vsliveshare.vsliveshare"
 			],
 
 			// "shutdownAction": "stopCompose"
