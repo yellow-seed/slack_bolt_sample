@@ -4,6 +4,7 @@ import os
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from dotenv import load_dotenv
+
 # GPT-3.5-turbo
 from langchain.chat_models import ChatOpenAI
 from langchain import LLMChain
@@ -16,6 +17,8 @@ from langchain.prompts.chat import (
     # user メッセージテンプレート
     HumanMessagePromptTemplate,
 )
+
+
 # from langchain.schema import (
 #     # それぞれ GPT-3.5-turbo API の assistant, user, system role に対応
 #     # AIMessage,
@@ -33,18 +36,15 @@ app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 llm = ChatOpenAI(temperature=0, openai_api_key=os.environ.get("OPEN_API_KEY"))
 
 # 日本語で ChatGPT っぽく丁寧に説明させる
-system_message_prompt = SystemMessagePromptTemplate.from_template(
-    "You are an assistant who thinks step by step and includes a thought path in your response. Your answers are in Japanese."
-    )
+system_message_prompt = SystemMessagePromptTemplate.from_template("You are an assistant who thinks step by step and includes a thought path in your response. Your answers are in Japanese.")
 # ユーザーからの入力
 human_template = "{text}"
 # User role のテンプレートに
 message_prompt = HumanMessagePromptTemplate.from_template(human_template)
 
 # ひとつのChatTemplateに
-chat_prompt = ChatPromptTemplate.from_messages(
-    [system_message_prompt, message_prompt])
-chat_prompt.input_variables = ['text']
+chat_prompt = ChatPromptTemplate.from_messages([system_message_prompt, message_prompt])
+chat_prompt.input_variables = ["text"]
 
 # カスタムプロンプトを入れてchain 化
 chain = LLMChain(llm=llm, prompt=chat_prompt)
@@ -75,10 +75,11 @@ chain = LLMChain(llm=llm, prompt=chat_prompt)
 @app.event("message")
 def handle_message_events(body, say):
     # メンションの内容を取得
-    text = body['event']['text']
-    say(text='回答を生成しています。しばらくお待ちください。')
+    text = body["event"]["text"]
+    say(text="回答を生成しています。しばらくお待ちください。")
     # LLMを動作させてチャンネルで発言
     say(chain.run(text=text))
+
 
 # @app.action("button_click")
 # def action_button_click(body, ack, say):

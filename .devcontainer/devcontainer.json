@@ -8,54 +8,61 @@
 		// Path is relataive to the devcontainer.json file.
 		"dockerfile": "Dockerfile"
 	},
-
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
-
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
-
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
-
 	// Configure tool-specific properties.
 	"customizations": {
-		// Configure properties specific to VS Code.
+		// VS Code特有のプロパティを設定する。
 		"vscode": {
-			// Set *default* container specific settings.json values on container create.
+			// コンテナ作成時に、*default*コンテナ固有のsettings.json値を設定する。
 			"settings": {
-				// "python.linting.enabled": true,
-				// "python.linting.lintOnSave": true,
+				// Lint機能を有効にするかどうか
+				"python.linting.enabled": true,
+				// ファイル保存時にLintを実行するか
+				"python.linting.lintOnSave": true,
 				// Pylance
 				// "python.languageServer": "Pylance",
 				// "python.analysis.completeFunctionParens": true,
-
-				// Linter(flake8)
+				// Linter(flake8): コードがPEP8に準拠しているかをチェックする
 				"python.linting.flake8Path": "/usr/local/bin/flake8",
+				// pyLintをOFF
 				"python.linting.pylintEnabled": false,
+				// flake8をON
 				"python.linting.flake8Enabled": true,
-
-				// Formatter(black)
+				"python.linting.flake8Args": [
+					// black の最大文字列数(default= 88) と flake8 の最大文字列数(default= 79)と異なるため調整　(ref: https://dk521123.hatenablog.com/entry/2021/11/10/095258)
+					"--max-line-length=210",
+					// E203 :コロンの前に空白が入っている
+					// W503: 演算子の前に改行
+					// W504: 演算子の後に改行
+					"--ignore=E203,W503,W504"
+				],
+				"python.formatting.blackArgs": [
+					// black の最大文字列数(default= 88) と flake8 の最大文字列数(default= 79)と異なるため調整
+					"--line-length=210"
+				],
+				// Formatter(black): 自動的にコードを整形する
 				"python.formatting.blackPath": "/usr/local/bin/black",
+				// Pythonコードの整形に何を使用するか
 				"python.formatting.provider": "black",
-				// "python.formatting.blackArgs": [
-				// 	"--line-length=79"
-				// ],
+				// 保存時にフォーマットをON
+				"editor.formatOnSave": true,
 				"[python]": {
-					"editor.formatOnSave": true
+					"editor.defaultFormatter": null
 				}
 			},
-
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
 				"ms-python.python",
 				"ms-vsliveshare.vsliveshare"
-			],
-
+			]
 			// "shutdownAction": "stopCompose"
 		}
 	}
-
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }
