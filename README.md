@@ -20,5 +20,5 @@ https://slack.dev/bolt-python/ja-jp/tutorial/getting-started
 ### linterなど
 https://dev.classmethod.jp/articles/vscode_black_flake8/
 
-### .gitatributes について
+### .gitattributes について
 [こちら](https://qiita.com/toromo/items/7b5703a695350473473d)を参照しました
