@@ -7,6 +7,14 @@
 		// Dockerfileを使用する場合に必要です。コンテナの中身を定義するDockerfileの場所です。パスはdevcontainer.jsonファイルからの相対パスです。
 		"dockerfile": "Dockerfile"
 	},
+	// コンテナ内で参照される環境変数.
+	"containerEnv": {
+		// タイムゾーンが Asia/Tokyoになるよう設定。時刻に起因する問題の調査は難しいので、ここで明示的に設定
+		"TZ": "Asia/Tokyo"
+	},
+	"runArgs": [
+		"--init"
+	]
 	// 開発用コンテナに追加する機能 詳細は: https://containers.dev/features.
 	// "features": {},
 	// コンテナ内のポート一覧をローカルで利用できるようにするには、「forwardPorts」を使用します。
