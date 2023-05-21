@@ -1,20 +1,19 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/python
+// フォーマットの詳細については、https://aka.ms/devcontainer.json を参照してください。設定オプションについては、以下のREADMEを参照してください。
+// https://github.com/devcontainers/templates/tree/main/src/python{
 {
+	// UIに表示されるdevコンテナの名前
 	"name": "bolt_sample",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	// "image": "mcr.microsoft.com/devcontainers/python:0-3.11"
 	"build": {
-		// Path is relataive to the devcontainer.json file.
+		// Dockerfileを使用する場合に必要です。コンテナの中身を定義するDockerfileの場所です。パスはdevcontainer.jsonファイルからの相対パスです。
 		"dockerfile": "Dockerfile"
 	},
-	// Features to add to the dev container. More info: https://containers.dev/features.
+	// 開発用コンテナに追加する機能 詳細は: https://containers.dev/features.
 	// "features": {},
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// コンテナ内のポート一覧をローカルで利用できるようにするには、「forwardPorts」を使用します。
 	// "forwardPorts": [],
-	// Use 'postCreateCommand' to run commands after the container is created.
+	// コンテナ作成後にコマンドを実行するには、「postCreateCommand」を使用します。
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
-	// Configure tool-specific properties.
+	// サポートツールで定義された、製品固有のプロパティ
 	"customizations": {
 		// VS Code特有のプロパティを設定する。
 		"vscode": {
@@ -55,14 +54,16 @@
 					"editor.defaultFormatter": null
 				}
 			},
-			// Add the IDs of extensions you want installed when the container is created.
+			// コンテナ作成時にインストールしたいエクステンションのIDを追加します。
 			"extensions": [
 				"ms-python.python",
 				"ms-vsliveshare.vsliveshare"
 			]
+			// devcontainer.jsonをサポートするツールが、関連するツールウィンドウを閉じる/シャットダウンする際に、コンテナを停止させるかどうかを示します。
+			// 値は、none、stopContainer（イメージまたはDockerfileのデフォルト）、stopCompose（Docker Composeのデフォルト）です。
 			// "shutdownAction": "stopCompose"
 		}
 	}
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// 代わりにrootとして接続する場合は、コメントを解除してください。詳しくは、 https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }
