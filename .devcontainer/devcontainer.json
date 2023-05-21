@@ -63,8 +63,12 @@
 			},
 			// コンテナ作成時にインストールしたいエクステンションのIDを追加します。
 			"extensions": [
+				// pythonの拡張
 				"ms-python.python",
-				"ms-vsliveshare.vsliveshare"
+				// liveshareの拡張
+				"ms-vsliveshare.vsliveshare",
+				// pythonのインデントを自動で生成する拡張 ref:https://marketplace.visualstudio.com/items?itemName=KevinRose.vsc-python-indent
+				"KevinRose.vsc-python-indent"
 			]
 			// devcontainer.jsonをサポートするツールが、関連するツールウィンドウを閉じる/シャットダウンする際に、コンテナを停止させるかどうかを示します。
 			// 値は、none、stopContainer（イメージまたはDockerfileのデフォルト）、stopCompose（Docker Composeのデフォルト）です。
