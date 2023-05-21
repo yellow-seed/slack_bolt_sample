@@ -12,9 +12,6 @@
 		// タイムゾーンが Asia/Tokyoになるよう設定。時刻に起因する問題の調査は難しいので、ここで明示的に設定
 		"TZ": "Asia/Tokyo"
 	},
-	"runArgs": [
-		"--init"
-	]
 	// 開発用コンテナに追加する機能 詳細は: https://containers.dev/features.
 	// "features": {},
 	// コンテナ内のポート一覧をローカルで利用できるようにするには、「forwardPorts」を使用します。
@@ -27,6 +24,8 @@
 		"vscode": {
 			// コンテナ作成時に、*default*コンテナ固有のsettings.json値を設定する。
 			"settings": {
+				// ファイルの中に紛れ込んだ全角スペースを見つけやすくするための拡張
+				"editor.renderWhitespace": "all",
 				// Lint機能を有効にするかどうか
 				"python.linting.enabled": true,
 				// ファイル保存時にLintを実行するか
