@@ -59,7 +59,14 @@
 				"editor.formatOnSave": true,
 				"[python]": {
 					"editor.defaultFormatter": null
-				}
+				},
+				// pytest起動時のオプションを三つ設定 
+				// tests: 対象ディレクトリ,
+				// --capture=tee-sys: テストコード内で標準出力された内容をpytestがキャプチャしてターミナルに出力してくれる
+				// --vv: pytestがキャプチャした出力を途中で切らずに全て出力
+				"python.testing.pytestArgs": ["tests", "--capture=tee-sys", "-vv"],
+				// VS Codeがpytestを使ってテストコードを検索
+        "python.testing.pytestEnabled": true
 			},
 			// コンテナ作成時にインストールしたいエクステンションのIDを追加します。
 			"extensions": [
