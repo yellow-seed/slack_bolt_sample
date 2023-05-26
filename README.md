@@ -21,7 +21,7 @@ pytest
 
 ただし事前にインストールする必要がある
 
-インストール方法はMacとWindowsでバラバラなので注意
+インストール方法はMacとWindowsでバラバラなので注意。[こちらのページ](https://github.com/nektos/act)を参照して導入する
 
 また、M1Macは実行時のactコマンドを最低でも以下にしないと実行に失敗する
 
@@ -29,6 +29,9 @@ pytest
 act --container-architecture linux/amd64
 ```
 
+初めてactを実行する場合、デフォルトで使用するイメージを選択するよう求められます。その情報は~/.actrcに保存されます。その際Medium Docker Imageを選ぶ。MicroにはPythonが入ってないので、今回のプロジェクトを動かすことができない。
+
+ref: https://github.com/nektos/act#first-act-run
 
 # 参考情報
 
