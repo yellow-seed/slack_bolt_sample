@@ -2,12 +2,22 @@ from notion_client import Client
 
 
 class NotionWeeklyReportFetcher:
-    def __init__(self, api_key, table_id, activity_report_column):
+    def __init__(self, api_key, table_id, target_period_col):
         self.notion = Client(auth=api_key)
         self.table_id = table_id
-        self.activity_report_column = activity_report_column
+        self.target_period_col = target_period_col
 
-    def fetch_pages(self, semesters, weeks):
+    def preprocess(self, row_data):
+        results = []
+        for dic in row_data:
+            if dic['タグ'] == '来週の活動と成果の予定' or dic['内容'] == '':
+                continue
+            new_dict = {key: dic[key].replace('\r', '').replace('\n', '')
+                        for key in dic if key not in ['活動報告', 'userid']}
+            results.append(new_dict)
+        return results
+
+    def fetch_records_for_week(self, semester, week):
         # データベースからすべてのレコードを取得
         pages = self.notion.databases.query(database_id=self.table_id)["results"]
 
@@ -19,12 +29,12 @@ class NotionWeeklyReportFetcher:
             properties = page["properties"]
 
             # 対象期間絞り込みのために活動報告カラムの値を取得
-            activity_report_value = properties[self.activity_report_column]["rich_text"][0]["plain_text"]
-            semester, week = activity_report_value.split('-')
+            target_period = properties[self.target_period_col]["rich_text"][0]["plain_text"]
+            page_semester, page_week = target_period.split('-')
 
-            # 活動報告カラムの値が指定する値に該当するかどうかを判定
-            if semester in semesters and week in weeks:
-                # 指定する値に該当する場合、各プロパティの値を取得
+            # レコードの学期と週が指定された学期と週と一致するか確認
+            if semester == page_semester and week == page_week:
+                # 一致する場合、各プロパティの値を取得
                 row = {}
                 for name, prop in properties.items():
                     # プロパティのタイプによって異なる形式の値が存在するため、それを判定
@@ -42,4 +52,4 @@ class NotionWeeklyReportFetcher:
                     row[name] = value
                 results.append(row)
 
-        return results
+        return self.preprocess(results)
