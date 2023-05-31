@@ -60,7 +60,7 @@
 				"[python]": {
 					"editor.defaultFormatter": null
 				},
-				// pytest起動時のオプションを三つ設定 
+				// pytest起動時のオプションを三つ設定
 				// tests: 対象ディレクトリ,
 				// --capture=tee-sys: テストコード内で標準出力された内容をpytestがキャプチャしてターミナルに出力してくれる
 				// --vv: pytestがキャプチャした出力を途中で切らずに全て出力

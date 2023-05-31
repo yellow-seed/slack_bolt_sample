@@ -29,7 +29,6 @@ class CoPyBot:
         system_template = """
         You are an assistant who thinks step by step and includes a thought path in your response.
         Your answers are in Japanese.
-        回答は必ず330文字以内とすること。それ以上の長文は回答しないこと。
         """
         system_message_prompt = SystemMessagePromptTemplate.from_template(system_template)
 
@@ -75,7 +74,7 @@ class CoPyBot:
 
     def register_listeners(self):
         @self.app.message(re.compile("(週報要約|マンスリーレビュー作って|たのむ|たのんだ)"))
-        def message_hello(message, say):
+        def message_hello(say):
             text = "こんにちは。co-py-bot だよ。\nマンスリーレビューを作成したい対象月を選んでね。"
             say(
                 blocks=[
@@ -96,7 +95,7 @@ class CoPyBot:
             )
 
         @self.app.action("select_month")
-        def action_button_click(body, ack, say):
+        def target_month_select(body, ack, say):
             ack()
 
             month = body['actions'][0]['selected_option']['value']
