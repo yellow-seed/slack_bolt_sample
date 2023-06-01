@@ -205,6 +205,9 @@ class CoPyBot:
                     if weekly_reports == []:
                         continue
 
+                    if self.streaming:
+                        say(f"{month}月第{week}週の週報を要約しています...")
+
                     # 抽出した週のデータを要約
                     summary = self.chain.run(month=month, weekly_reports=weekly_reports)
                     summaries.append(summary)
