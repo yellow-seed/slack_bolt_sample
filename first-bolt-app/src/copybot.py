@@ -214,7 +214,11 @@ class CoPyBot:
                     print(summary)
 
             # すべての要約を結合して更に要約
-            print('各週の内容から１か月分の要約を作成中...')
+            launch_comment = "各週の内容から１か月分の要約を作成中..."
+            print(launch_comment)
+            if self.streaming:
+                say(launch_comment)
+
             concat_summary = ' '.join(summaries)
             monthly_report = self.chain.run(month=month, weekly_reports=concat_summary)
             say(monthly_report)
