@@ -198,7 +198,7 @@ class CoPyBot:
             summaries = []
             # 指定した学期と週のデータを１週間ずつ逐次抽出
             for semester in semesters:
-                for week in tqdm(weeks):
+                for i, week in enumerate(tqdm(weeks)):
                     weekly_reports = client.fetch_records_for_week(semester, week)
 
                     # 当該週のデータがない場合はスキップ
@@ -206,7 +206,7 @@ class CoPyBot:
                         continue
 
                     if self.streaming:
-                        say(f"{month}月第{week}週の週報を要約しています...")
+                        say(f"{month}月第{i + 1}週の週報を要約しています...")
 
                     # 抽出した週のデータを要約
                     summary = self.chain.run(month=month, weekly_reports=weekly_reports)
