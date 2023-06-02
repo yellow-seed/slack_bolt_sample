@@ -18,9 +18,8 @@ load_dotenv()
 
 
 class CoPyBot:
-    def __init__(self, args):
+    def __init__(self):
         self.app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
-        self.slack_channel = "#" + args.slack_channel
         self.register_listeners()
 
     def create_chain(self, llm):
@@ -70,19 +69,15 @@ class CoPyBot:
 
         return chain
 
-    def get_llm(self):
+    def get_llm(self, say):
         def say_function(message):
-            self.app.client.chat_postMessage(channel=self.slack_channel, text=message)
+            say(message)
 
         callback_manager = CallbackManager([SlackCallbackHandler(say_function)]) if self.streaming else None
 
-        return ChatOpenAI(temperature=0,
-                          openai_api_key=os.environ.get("OPENAI_API_KEY"),
-                          model_name="gpt-3.5-turbo",
-                          streaming=self.streaming,
-                          callback_manager=callback_manager)
+        return ChatOpenAI(temperature=0, openai_api_key=os.environ.get("OPENAI_API_KEY"), model_name="gpt-3.5-turbo", streaming=self.streaming, callback_manager=callback_manager)
 
-    def weekly_summary(self, period, month, i, week):
+    def weekly_summary(self, period, month, i, week, say):
         notion_api_key = os.environ.get("NOTION_API_KEY")
         table_id = "01be2b6ddec849d199e6c4f555accc98"
         target_period_col = "活動報告"
@@ -94,17 +89,17 @@ class CoPyBot:
             return None
 
         if self.streaming:
-            self.app.client.chat_postMessage(channel=self.slack_channel, text=f"{month}月第{i + 1}週の週報を要約しています...")
+            say(f"{month}月第{i + 1}週の週報を要約しています...")
 
         return self.chain.run(month=month, weekly_reports=weekly_reports)
 
-    def monthly_summary(self, summaries, month):
+    def monthly_summary(self, summaries, month, say):
         launch_comment = "各週の内容から１か月分の要約を作成中..."
         print(launch_comment)
         if self.streaming:
-            self.app.client.chat_postMessage(channel=self.slack_channel, text=launch_comment)
+            say(launch_comment)
 
-        concat_summary = ' '.join(summaries)
+        concat_summary = " ".join(summaries)
         monthly_report = self.chain.run(month=month, weekly_reports=concat_summary)
         return monthly_report
 
@@ -122,10 +117,7 @@ class CoPyBot:
                             "action_id": "mode_selection",
                             "type": "static_select",
                             "placeholder": {"type": "plain_text", "text": "選択してください"},
-                            "options": [{"text": {"type": "plain_text", "text": "はい"},
-                                         "value": "1"},
-                                        {"text": {"type": "plain_text", "text": "いいえ"},
-                                         "value": "0"}],
+                            "options": [{"text": {"type": "plain_text", "text": "はい"}, "value": "1"}, {"text": {"type": "plain_text", "text": "いいえ"}, "value": "0"}],
                         },
                     }
                 ],
@@ -135,7 +127,7 @@ class CoPyBot:
         @self.app.action("mode_selection")
         def message_month_selection(body, ack, say):
             ack()
-            self.streaming = int(body['actions'][0]['selected_option']['value'])
+            self.streaming = int(body["actions"][0]["selected_option"]["value"])
 
             text = "マンスリーレビューを作成したい対象月を選んでね。"
             say(
@@ -148,8 +140,7 @@ class CoPyBot:
                             "action_id": "month_selection",
                             "type": "static_select",
                             "placeholder": {"type": "plain_text", "text": "対象月を選択"},
-                            "options": [{"text": {"type": "plain_text", "text": f"{month}月"},
-                                         "value": str(month)} for month in range(1, 13)],
+                            "options": [{"text": {"type": "plain_text", "text": f"{month}月"}, "value": str(month)} for month in range(1, 13)],
                         },
                     }
                 ],
@@ -160,21 +151,20 @@ class CoPyBot:
         def make_monthly_review(body, ack, say):
             ack()
 
-            month = body['actions'][0]['selected_option']['value']
+            month = body["actions"][0]["selected_option"]["value"]
             period = ACADEMIC_PERIODS[month]
-            print(period.weeks, period.quarter)
             say(f"了解。{month}月の週報をもとにマンスリーレビュー資料をまとめるね。少し待ってね。")
 
-            self.chain = self.create_chain(self.get_llm())
+            self.chain = self.create_chain(self.get_llm(say))
 
             summaries = []
             for i, week in enumerate(tqdm(period.weeks)):
-                weekly_summary = self.weekly_summary(period, month, i, week)
+                weekly_summary = self.weekly_summary(period, month, i, week, say)
                 if weekly_summary is not None:
                     summaries.append(weekly_summary)
                     print(weekly_summary)
 
-            monthly_report = self.monthly_summary(summaries, month)
+            monthly_report = self.monthly_summary(summaries, month, say)
             say(monthly_report)
             print("Done!")
 
