@@ -25,7 +25,7 @@ ACADEMIC_PERIODS = {
 }
 
 
-class ForSlackCallbackHandler(BaseCallbackHandler):
+class SlackCallbackHandler(BaseCallbackHandler):
     def __init__(self, say_function):
         self.say = say_function
         self.token_count = 0
