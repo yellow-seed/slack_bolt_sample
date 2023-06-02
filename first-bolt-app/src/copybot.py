@@ -1,4 +1,3 @@
-import argparse
 import os
 import re
 
@@ -184,9 +183,5 @@ class CoPyBot:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--slack_channel', '-sc', type=str, default='bot_test')
-    args = parser.parse_args()
-
-    bot = CoPyBot(args)
+    bot = CoPyBot()
     bot.start()
