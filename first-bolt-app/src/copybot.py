@@ -13,7 +13,7 @@ from notion_fetcher import NotionWeeklyReportFetcher
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from tqdm import tqdm
-from utility import ACADEMIC_PERIODS, ForSlackCallbackHandler
+from utility import ACADEMIC_PERIODS, SlackCallbackHandler
 
 load_dotenv()
 
@@ -75,7 +75,7 @@ class CoPyBot:
         def say_function(message):
             self.app.client.chat_postMessage(channel=self.slack_channel, text=message)
 
-        callback_manager = CallbackManager([ForSlackCallbackHandler(say_function)]) if self.streaming else None
+        callback_manager = CallbackManager([SlackCallbackHandler(say_function)]) if self.streaming else None
 
         return ChatOpenAI(temperature=0,
                           openai_api_key=os.environ.get("OPENAI_API_KEY"),
