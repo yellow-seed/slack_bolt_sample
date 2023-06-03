@@ -75,7 +75,11 @@ class CoPyBot:
 
         callback_manager = CallbackManager([SlackCallbackHandler(say_function)]) if self.is_streaming else None
 
-        return ChatOpenAI(temperature=0, openai_api_key=os.environ.get("OPENAI_API_KEY"), model_name="gpt-3.5-turbo", streaming=self.is_streaming, callback_manager=callback_manager)
+        return ChatOpenAI(temperature=0,
+                          openai_api_key=os.environ.get("OPENAI_API_KEY"),
+                          model_name="gpt-3.5-turbo",
+                          streaming=self.is_streaming,
+                          callback_manager=callback_manager)
 
     def weekly_summary(self, period, month, i, week, say):
         notion_api_key = os.environ.get("NOTION_API_KEY")
