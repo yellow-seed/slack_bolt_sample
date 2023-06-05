@@ -6,3 +6,4 @@ pytest
 pre-commit
 black
 flake8
+notion_client
