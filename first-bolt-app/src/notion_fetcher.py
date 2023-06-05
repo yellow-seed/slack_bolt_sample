@@ -2,10 +2,8 @@ from notion_client import Client
 
 
 class NotionWeeklyReportFetcher:
-    def __init__(self, api_key, table_id, target_period_col):
+    def __init__(self, api_key):
         self.notion_client = Client(auth=api_key)
-        self.table_id = table_id
-        self.target_period_col = target_period_col
 
     def preprocess(self, row_data):
         results = []
@@ -18,17 +16,17 @@ class NotionWeeklyReportFetcher:
 
     def fetch_records_for_week(self, semester, week):
         # データベースからすべてのレコードを取得
-        pages = self.notion_client.databases.query(database_id=self.table_id)["results"]
+        pages = self.notion_client.databases.query(
+            database_id="01be2b6ddec849d199e6c4f555accc98")["results"]
 
         results = []
-
         # 各レコードに対して
         for page in pages:
             # すべてのプロパティを取得
             properties = page["properties"]
 
             # 対象期間絞り込みのために活動報告カラムの値を取得
-            target_period = properties[self.target_period_col]["rich_text"][0]["plain_text"]
+            target_period = properties["活動報告"]["rich_text"][0]["plain_text"]
             page_semester, page_week = target_period.split("-")
 
             # レコードの学期と週が指定された学期と週と一致するか確認

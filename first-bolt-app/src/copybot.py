@@ -83,9 +83,7 @@ class CoPyBot:
 
     def weekly_summary(self, period, month, i, week, say):
         notion_api_key = os.environ.get("NOTION_API_KEY")
-        table_id = "01be2b6ddec849d199e6c4f555accc98"
-        target_period_col = "活動報告"
-        client = NotionWeeklyReportFetcher(notion_api_key, table_id, target_period_col)
+        client = NotionWeeklyReportFetcher(notion_api_key)
 
         weekly_reports = client.fetch_records_for_week(period.quarter, week)
 
