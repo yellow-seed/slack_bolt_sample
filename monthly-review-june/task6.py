@@ -1,3 +1,5 @@
+# task5で文章生成する仕組みを利用してslackに出力する
+
 import os
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
@@ -37,9 +39,7 @@ llm = ChatOpenAI(temperature=0, openai_api_key=os.environ.get("OPENAI_API_KEY"),
 # 日本語で ChatGPT っぽく丁寧に説明させる
 system_message_prompt = SystemMessagePromptTemplate.from_template("You are an assistant who thinks step by step and includes a thought path in your response. Your answers are in Japanese.")
 # ユーザーからの入力
-human_template = (
-    "{text}" + "-困ったときは学習が目的というところに立ち返って、学習に最適な進め方を行う。-たとえば、プロダクトの締め切りに追われたとしても、リソース効率が落ちるからという理由でモブプログラミングを軽視しない。プロダクトを作ることが目的にならないように注意を払う。-モブプロにおいては、実装を実際に行う時間と、いったん立ち止まって情報の整理や質疑応答を行う時間に分けて運用すると学習効果が高まります。"
-)
+human_template = "{text}"
 
 # User role のテンプレートに
 human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
@@ -52,17 +52,13 @@ chat_prompt.input_variables = ["text"]
 chain = LLMChain(llm=llm, prompt=chat_prompt)
 
 
-# @app.message("hello")
-# def message_hello(message, say):
-#     # イベントがトリガーされたチャンネルへ say() でメッセージを送信します
-#     say(f"Hey there <@{message['user']}>!")
-
-
-@app.event("app_mention")
-def command_handler(body, say):
+@app.event("message")
+def command_handler(body, say):  # 月次で活動報告をする場合に、どのような点を心がけるとよいですか。何点か提示してください。 とslackで尋ねてみる
     # メンションの内容を取得
     mention_text = body["event"]["text"]
+    print(mention_text)
     # LLMを動作させてチャンネルで発言
+    say('回答までしばらくお待ち下さい。')
     say(chain.run(text=mention_text))
 
 
