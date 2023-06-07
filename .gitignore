@@ -1,2 +1,3 @@
 ./first-bolt-app/src/__pycache__/*
 *.env
+*.pyc
