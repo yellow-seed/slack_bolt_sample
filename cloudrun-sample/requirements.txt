@@ -1,0 +1,4 @@
+slack_bolt
+Flask>=1.1
+gunicorn>=20
+python-dotenv
