@@ -21,8 +21,8 @@ class SlackAppController(object):
     def startSocketMode(self):
         self.handler.start()
 
-    def runFlask(self, flask_app):
-        flask_app.run(host="0.0.0.0", port=5000)
+    def runFlask(self, flask_app):  # ngrok のポートと合わせてください
+        flask_app.run(host="0.0.0.0", port=5422)
 
 
 # 下記はデバックでapp_handler単体をソケットモードで動かす
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     load_dotenv()
 
     # ロードした情報を格納
-    access_token = os.environ.get("SLACK_ACCESS_TOKEN")
+    access_token = os.environ.get("SLACK_BOT_TOKEN")
     app_token = os.environ.get("SLACK_APP_TOKEN")
 
     slack_app = App(token=access_token)

@@ -10,6 +10,14 @@ from flask import Flask, request
 def initFlaskApp(flask_app):
     @flask_app.route("/slack/events", methods=["POST"])
     def slack_events():
+        payload = request.get_json()
+        if "challenge" in payload:
+            # これはチャレンジリクエストです。アプリを確認するためにチャレンジ値で応答してください。
+            # ref: https://qiita.com/masa_masa_ra/items/618779e698921cb53cec
+            return payload["challenge"]
+        else:
+            # これは通常のイベントです。SlackRequestHandlerで処理してください。
+            return handler.handle(request)
         return handler.handle(request)
 
 
@@ -28,7 +36,7 @@ if __name__ == "__main__":
     load_dotenv()
 
     # ロードした情報を格納
-    access_token = os.environ.get("SLACK_ACCESS_TOKEN")
+    access_token = os.environ.get("SLACK_BOT_TOKEN")
     signing_secret = os.environ.get("SLACK_SIGNING_SECRET")
 
     # インスタンス生成
