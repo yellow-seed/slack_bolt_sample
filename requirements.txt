@@ -13,3 +13,6 @@ scipy
 scikit-learn
 pdfminer
 pdfminer.six
+rich
+flask
+notion_client
