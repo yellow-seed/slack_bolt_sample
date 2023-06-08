@@ -6,3 +6,10 @@ pytest
 pre-commit
 black
 flake8
+pandas
+matplotlib
+plotly
+scipy
+scikit-learn
+pdfminer
+pdfminer.six
