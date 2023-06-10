@@ -56,7 +56,7 @@ chain = LLMChain(llm=llm, prompt=chat_prompt)
 # def message_hello(message, say):
 #     # イベントがトリガーされたチャンネルへ say() でメッセージを送信します
 #     say(f"Hey there <@{message['user']}>!")
-ym_select = {"2023年5月": "2023-06-10", "2023年6月": "2023-06-07", "2023年7月": "2023-06-05"}
+ym_select = {"2023年5月": "2023-05", "2023年6月": "2023-06", "2023年7月": "2023-07"}
 
 options = []
 for k, v in ym_select.items():
@@ -65,10 +65,10 @@ for k, v in ym_select.items():
 select_block = [
     {
         "type": "section",
-        "block_id": "section678",
-        "text": {"type": "mrkdwn", "text": "Pick an item from the dropdown list"},
+        "block_id": "monthly_select",
+        "text": {"type": "mrkdwn", "text": "どの月のマンスリーレビューをまとめますか？"},
         "accessory": {
-            "action_id": "text1234",
+            "action_id": "monthly_select_option",
             "type": "static_select",
             "placeholder": {"type": "plain_text", "text": "Select an item"},
             "options": options,
@@ -78,11 +78,13 @@ select_block = [
 
 
 @app.event("app_mention")
-def command_handler(body, say):
+def mention_handler(body, say):
     # メンションの内容を取得
     mention_text = body["event"]["text"]
     if "マンスリーレビューをまとめてください" in mention_text:
         say(blocks=select_block)
+        # セレクトボックスを出したら終了
+        return
     # LLMを動作させてチャンネルで発言
     say(chain.run(text=mention_text))
 
