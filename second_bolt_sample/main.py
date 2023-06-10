@@ -56,16 +56,42 @@ chain = LLMChain(llm=llm, prompt=chat_prompt)
 # def message_hello(message, say):
 #     # イベントがトリガーされたチャンネルへ say() でメッセージを送信します
 #     say(f"Hey there <@{message['user']}>!")
+ym_select = {"2023年5月": "2023-06-10", "2023年6月": "2023-06-07", "2023年7月": "2023-06-05"}
+
+options = []
+for k, v in ym_select.items():
+    options.append({"text": {"type": "plain_text", "text": k}, "value": v})
+
+select_block = [
+    {
+        "type": "section",
+        "block_id": "section678",
+        "text": {"type": "mrkdwn", "text": "Pick an item from the dropdown list"},
+        "accessory": {
+            "action_id": "text1234",
+            "type": "static_select",
+            "placeholder": {"type": "plain_text", "text": "Select an item"},
+            "options": options,
+        },
+    }
+]
 
 
 @app.event("app_mention")
 def command_handler(body, say):
     # メンションの内容を取得
     mention_text = body["event"]["text"]
+    if "マンスリーレビューをまとめてください" in mention_text:
+        say(blocks=select_block)
     # LLMを動作させてチャンネルで発言
     say(chain.run(text=mention_text))
 
 
 # アプリを起動します
 if __name__ == "__main__":
+    mention_text = (
+        "-困ったときは学習が目的というところに立ち返って、学習に最適な進め方を行う。-たとえば、プロダクトの締め切りに追われたとしても、リソース効率が落ちるからという理由でモブプログラミングを軽視しない。プロダクトを作ることが目的にならないように注意を払う。-モブプロにおいては、実装を実際に行う時間と、いったん立ち止まって情報の整理や質疑応答を行う時間に分けて運用すると学習効果が高まります。"
+    )
+    # print(chain.run(text=mention_text))
+
     SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
