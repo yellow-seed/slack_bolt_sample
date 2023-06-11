@@ -5,11 +5,13 @@ from notion_client import Client as NotionClient
 from notion_client.api_endpoints import BlocksChildrenEndpoint
 
 load_dotenv()
-notion = NotionClient(auth=os.environ.get("NOTION_TOKEN"))
+# Notion Client (https://github.com/ramnes/notion-sdk-py/tree/main)
+# タイムアウトを60から90秒に変更
+notion = NotionClient(auth=os.environ.get("NOTION_TOKEN"), timeout_ms=900_00)
 
 
 # child_block(dict型)からplain_textを取得する
-def get_text_from_list_item(block):
+def _get_text_from_list_item(block):
     plain_text = ""
     for item in ["numbered_list_item", "bulleted_list_item"]:
         if block.get(item):
@@ -23,11 +25,26 @@ def get_text_from_list_item(block):
 
 
 # heading_1, heading_2(dict型)からplain_textを取得する
-def get_text_from_heading(block, level):
+def _get_text_from_heading(block, level):
     if block.get("heading_" + level):
         body = block["heading_" + level]["rich_text"][0]["plain_text"]
         return body
     return ""
+
+
+# 自要素のplain_textを取得
+# その後,再帰的に子要素のplain_textを取得
+# bodyは参照渡し
+def get_text_recursively(body, block, endpoint=None):
+    if not endpoint:
+        endpoint = BlocksChildrenEndpoint(notion)
+
+    for content in endpoint.list(block["id"])["results"]:
+        txt = _get_text_from_list_item(content)
+        if txt:
+            body.append(txt)
+        if content["has_children"]:
+            get_text_recursively(body, content, endpoint)
 
 
 # 議事録ページのID
@@ -35,7 +52,7 @@ PAGE_ID = "0d1661a7710c4bc892b590b5df7faea9"
 
 
 # 議事メモの内容を取得する
-# 色々とあきらめたコード
+# 引数は取得対象の回
 def gijiroku_contents(target):
     body = []
     block_children = BlocksChildrenEndpoint(notion)
@@ -43,28 +60,10 @@ def gijiroku_contents(target):
 
     for block in gijiroku["results"]:
         if block.get("heading_1"):
-            if target in get_text_from_heading(block, "1"):
+            if target in _get_text_from_heading(block, "1"):
                 for block2 in block_children.list(block["id"])["results"]:
-                    if "議事メモ" in get_text_from_heading(block2, "2"):
-                        for block3 in block_children.list(block2["id"])["results"]:
-                            txt3 = get_text_from_list_item(block3)
-                            if txt3:
-                                body.append(txt3)
-                            if block3["has_children"]:
-                                for block4 in block_children.list(block3["id"])["results"]:
-                                    txt4 = get_text_from_list_item(block4)
-                                    if txt4:
-                                        body.append(txt4)
-                                    if block4["has_children"]:
-                                        for block5 in block_children.list(block4["id"])["results"]:
-                                            txt5 = get_text_from_list_item(block5)
-                                            if txt5:
-                                                body.append(txt5)
-                                            if block5["has_children"]:
-                                                for block6 in block_children.list(block5["id"])["results"]:
-                                                    txt6 = get_text_from_list_item(block6)
-                                                    if txt6:
-                                                        body.append(txt6)
+                    if "議事メモ" in _get_text_from_heading(block2, "2"):
+                        get_text_recursively(body, block2, block_children)
     return body
 
 
@@ -76,7 +75,7 @@ def gijiroku_list():
     dict = {}
     for block in gijiroku["results"]:
         if block.get("heading_1"):
-            p_text = get_text_from_heading(block, "1")
+            p_text = _get_text_from_heading(block, "1")
             # 一部を置換
             val = p_text.replace("年", "-").replace("月", "-").replace("日", "")
             # valueを抽出 ex. 2023-06-19
