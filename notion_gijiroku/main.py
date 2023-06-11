@@ -65,7 +65,7 @@ options = []
 for k, v in ym_select.items():
     options.append({"text": {"type": "plain_text", "text": k}, "value": v})
 
-ym_select = notion.gijiroku_list()
+ym_select = notion.Gijiroku().gijiroku_list()
 select_block = [
     {
         "type": "section",
@@ -90,7 +90,7 @@ def mention_handler(body, say):
         # セレクトボックスを出したら終了
         return
     elif "Notionの議事録をまとめてください" in mention_text:
-        say(blocks=notion.gijiroku_select_block())
+        say(blocks=notion.Gijiroku().gijiroku_select_block())
         return
     # LLMを動作させてチャンネルで発言
     say(chain.run(text=mention_text))
@@ -105,7 +105,7 @@ def action_button_click(body, ack, say):
     say(text=selected + "の議事録を取得しています。")
 
     # 議事録取得
-    raw_gijiroku = notion.gijiroku_contents(selected)
+    raw_gijiroku = notion.Gijiroku().gijiroku_contents(selected)
     if not raw_gijiroku:
         say(text="議事録が取得できませんでした。対象月を変更してください。")
         return
