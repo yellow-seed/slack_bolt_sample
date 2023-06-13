@@ -8,7 +8,7 @@ class Gijiroku:
     def __init__(self):
         # Notion Client (https://github.com/ramnes/notion-sdk-py/tree/main)
         # タイムアウトを60から90秒に変更
-        self.notion_client = NotionClient(auth=os.environ.get("NOTION_TOKEN"), timeout_ms=900_00)
+        self.notion_client = NotionClient(auth=os.environ.get("NOTION_API_TOKEN"), timeout_ms=900_00)
         # blockを取得するためのエンドポイント
         self.endpoint = BlocksChildrenEndpoint(self.notion_client)
         # 議事録ページのID
