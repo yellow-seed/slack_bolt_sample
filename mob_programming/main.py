@@ -90,19 +90,12 @@ def command_handler(body, say):
     # LLMを動作させてチャンネルで発言
     say(chain.run(text=mention_text))
 
+
 def fetch_records_for_week(semester=None, week=None):
-    filter_obj = {
-      "property": "活動報告",
-      "rich_text": {
-      "contains": "1Q-03"
-      }
-    }
-    pages = notion.databases.query(**{
-        "database_id": "01be2b6ddec849d199e6c4f555accc98",
-        "filter": filter_obj
-    }
-    )
-    return pages['results']
+    filter_obj = {"property": "活動報告", "rich_text": {"contains": "1Q-03"}}
+    pages = notion.databases.query(**{"database_id": "01be2b6ddec849d199e6c4f555accc98", "filter": filter_obj})
+    return pages["results"]
+
 
 # アプリを起動します
 if __name__ == "__main__":

@@ -1,33 +1,34 @@
-// {
-//   "python.analysis.completeFunctionParens": true,
-//   "python.analysis.typeCheckingMode": "strict",
-//   "python.analysis.diagnosticMode": "workspace",
-
-//   // 言語サーバーはPylanceを使用
-//   "python.languageServer": "Pylance",
-
-//   // Linter(flake8) settings
-//   // "python.linting.enabled": true,  // 文法チェックを行う
-//   // "python.linting.pylintEnabled": false,  // pylint は使わない
-//   // "python.linting.pycodestyleEnabled": false, // pycodestyleは使わない
-//   // "python.linting.flake8Enabled": true,  // 文法チェックにはflake8を使用する
-//   // "python.linting.flake8Args": [  // flake8 の設定
-//   //   "--ignore=E111, E114, E402, E501"
-//   // ],
-
-//   // Formatter(autopep8) settings
-//   "python.formatting.provider": "autopep8",  // 自動整形に autopep8 を使う
-//   "python.formatting.autopep8Args": [  // autopep8 の設定
-//     "--indent-size=4",
-//     "--max-line-length",
-//     "160",
-//     "--ignore=E111, E114, E402, E501"
-//   ],
-
-//   "[python]": {
-//     "editor.tabSize": 4,  // インデントレベルは4
-//     "editor.formatOnSave": true,  // 保存時に自動整形を行う
-//     "editor.formatOnPaste": false,  // ペースト時に自動整形を行わない
-//     "editor.formatOnType": false,  // 入力後に自動整形を行わない
-//   },
-// }
+{
+  "python.analysis.completeFunctionParens": true,
+  // "python.analysis.typeCheckingMode": "strict",
+  "python.analysis.diagnosticMode": "workspace",
+  // 言語サーバーはPylanceを使用
+  "python.languageServer": "Pylance",
+  // Linter(flake8) settings
+  // "python.linting.enabled": true,  // 文法チェックを行う
+  // "python.linting.pylintEnabled": false,  // pylint は使わない
+  // "python.linting.pycodestyleEnabled": false, // pycodestyleは使わない
+  // "python.linting.flake8Enabled": true,  // 文法チェックにはflake8を使用する
+  // "python.linting.flake8Args": [  // flake8 の設定
+  //   "--ignore=E111, E114, E402, E501"
+  // ],
+  // Formatter(autopep8) settings
+  // "python.formatting.provider": "autopep8",  // 自動整形に autopep8 を使う
+  // "python.formatting.autopep8Args": [  // autopep8 の設定
+  //   "--indent-size=4",
+  //   "--max-line-length",
+  //   "160",
+  //   "--ignore=E111, E114, E402, E501"
+  // ],
+  // "[python]": {
+  //   "editor.tabSize": 4,  // インデントレベルは4
+  //   "editor.formatOnSave": true,  // 保存時に自動整形を行う
+  //   "editor.formatOnPaste": false,  // ペースト時に自動整形を行わない
+  //   "editor.formatOnType": false,  // 入力後に自動整形を行わない
+  // },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true // 保存時に自動整形を行う
+  },
+  "python.formatting.provider": "none"
+}
