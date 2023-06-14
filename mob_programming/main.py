@@ -1,5 +1,5 @@
 import os
-
+from rich import print
 from notion_client import Client
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
@@ -30,6 +30,8 @@ load_dotenv()
 
 # ボットトークンとソケットモードハンドラーを使ってアプリを初期化します
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
+
+notion = Client(auth=os.environ["NOTION_API_KEY"])
 
 # モデル作成
 # わかりやすい解説
@@ -89,16 +91,18 @@ def command_handler(body, say):
     say(chain.run(text=mention_text))
 
 def fetch_records_for_week(semester=None, week=None):
-    pages = notion_client.databases.query(
-        database_id="01be2b6ddec849d199e6c4f555accc98",
-        # filter={
-        #     "and": [
-        #         {"property": "Semester", "select": {"equals": semester}},
-        #         {"property": "Week", "select": {"equals": week}},
-        #     ]
-        # },
+    filter_obj = {
+      "property": "活動報告",
+      "rich_text": {
+      "contains": "1Q-03"
+      }
+    }
+    pages = notion.databases.query(**{
+        "database_id": "01be2b6ddec849d199e6c4f555accc98",
+        "filter": filter_obj
+    }
     )
-    return pages
+    return pages['results']
 
 # アプリを起動します
 if __name__ == "__main__":
