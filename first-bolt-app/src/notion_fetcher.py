@@ -16,8 +16,11 @@ class NotionWeeklyReportFetcher:
 
     def fetch_records_for_week(self, semester, week):
         # データベースからすべてのレコードを取得
+        filter_obj = {"property": "活動報告", "title": {"contains": f"{semester}-{week}"}}
+
         pages = self.notion_client.databases.query(
-            database_id="01be2b6ddec849d199e6c4f555accc98")["results"]
+            **{"database_id": "01be2b6ddec849d199e6c4f555accc98", "filter": filter_obj}
+        )["results"]
 
         results = []
         # 各レコードに対して
