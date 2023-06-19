@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os,sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "../notion_db_sample")
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../notion_db_sample")
 
 from rich import print
 from dotenv import load_dotenv
