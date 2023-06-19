@@ -93,8 +93,38 @@ def command_handler(body, say):
 
 def fetch_records_for_week(semester=None, week=None):
     filter_obj = {"property": "活動報告", "rich_text": {"contains": "1Q-03"}}
-    pages = notion.databases.query(**{"database_id": "01be2b6ddec849d199e6c4f555accc98", "filter": filter_obj})
-    return pages["results"]
+    pages = notion.databases.query(**{"database_id": "01be2b6ddec849d199e6c4f555accc98", "filter": filter_obj})["results"]
+    results = []
+    # 各レコードに対して
+    for page in pages:
+        # すべてのプロパティを取得
+        properties = page["properties"]
+
+        # 対象期間絞り込みのために活動報告カラムの値を取得
+        target_period = properties["活動報告"]["rich_text"][0]["plain_text"]
+        page_semester, page_week = target_period.split("-")
+
+        # レコードの学期と週が指定された学期と週と一致するか確認
+        # if semester == page_semester and week == page_week:
+            # 一致する場合、各プロパティの値を取得
+        row = {}
+        for name, prop in properties.items():
+            # プロパティのタイプによって異なる形式の値が存在するため、それを判定
+            if prop["type"] == "title":
+                # タイトルプロパティの場合、テキストを取得
+                value = prop["title"][0]["plain_text"]  # userid
+            elif prop["type"] == "rich_text":
+                # リッチテキストプロパティの場合、テキストを取得
+                value = prop["rich_text"][0]["plain_text"]  # 内容, 活動報告
+            elif prop["type"] == "multi_select":  # タグ
+                # マルチセレクトプロパティの場合、選択されたオプションの名前をすべて取得
+                value = ", ".join(option["name"] for option in prop["multi_select"])
+            else:
+                value = "Unsupported property type: " + prop["type"]
+            row[name] = value
+        results.append(row)
+
+    return results
 
 
 # アプリを起動します
