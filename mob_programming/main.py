@@ -37,12 +37,11 @@ notion = Client(auth=os.environ["NOTION_API_KEY"])
 # https://note.com/npaka/n/n403fc29a02c7
 llm = ChatOpenAI(temperature=0, openai_api_key=os.environ.get("OPENAI_API_KEY"), model_name="gpt-3.5-turbo")
 
+# todo: ここにテンプレートをいれる
 # 日本語で ChatGPT っぽく丁寧に説明させる
 system_message_prompt = SystemMessagePromptTemplate.from_template("You are an assistant who thinks step by step and includes a thought path in your response. Your answers are in Japanese.")
 # ユーザーからの入力
-human_template = (
-    "{text}" + "-困ったときは学習が目的というところに立ち返って、学習に最適な進め方を行う。-たとえば、プロダクトの締め切りに追われたとしても、リソース効率が落ちるからという理由でモブプログラミングを軽視しない。プロダクトを作ることが目的にならないように注意を払う。-モブプロにおいては、実装を実際に行う時間と、いったん立ち止まって情報の整理や質疑応答を行う時間に分けて運用すると学習効果が高まります。"
-)
+human_template = "{text}"
 
 # User role のテンプレートに
 human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
