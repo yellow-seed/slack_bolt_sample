@@ -1,4 +1,6 @@
 import os
+from rich import print
+from notion_client import Client
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from dotenv import load_dotenv
@@ -28,6 +30,8 @@ load_dotenv()
 
 # ボットトークンとソケットモードハンドラーを使ってアプリを初期化します
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
+
+notion = Client(auth=os.environ["NOTION_API_KEY"])
 
 # モデル作成
 # わかりやすい解説
@@ -87,11 +91,18 @@ def command_handler(body, say):
     say(chain.run(text=mention_text))
 
 
+def fetch_records_for_week(semester=None, week=None):
+    filter_obj = {"property": "活動報告", "rich_text": {"contains": "1Q-03"}}
+    pages = notion.databases.query(**{"database_id": "01be2b6ddec849d199e6c4f555accc98", "filter": filter_obj})
+    return pages["results"]
+
+
 # アプリを起動します
 if __name__ == "__main__":
     mention_text = (
         "-困ったときは学習が目的というところに立ち返って、学習に最適な進め方を行う。-たとえば、プロダクトの締め切りに追われたとしても、リソース効率が落ちるからという理由でモブプログラミングを軽視しない。プロダクトを作ることが目的にならないように注意を払う。-モブプロにおいては、実装を実際に行う時間と、いったん立ち止まって情報の整理や質疑応答を行う時間に分けて運用すると学習効果が高まります。"
     )
     # print(chain.run(text=mention_text))
+    print(fetch_records_for_week("2023-06-10", "2023-06-10"))
 
-    SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
+    # SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
