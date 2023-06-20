@@ -110,8 +110,14 @@ if __name__ == "__main__":
             else:
                 pr_status = "Open"
 
+        # コメント数を集計する
         comment_users = [pr_obj.user.login]
+        # 通常コメント
         comments = pr_obj.get_issue_comments()
+        for comment in comments:
+            comment_users.append(comment.user.login)
+        # Reviewコメント
+        comments = pr_obj.get_review_comments()
         for comment in comments:
             comment_users.append(comment.user.login)
 
