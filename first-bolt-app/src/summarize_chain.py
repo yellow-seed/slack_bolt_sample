@@ -39,7 +39,7 @@ class Summarizer:
                                                          callback_manager=CallbackManager([StreamingStdOutCallbackHandler()])),
                                           chain_type="refine",  # 要約モードは３種類用意されている。今回はrefineモードを使用：要約文の逐次改善に重点がある
                                           verbose=None,  # これをTrueにすると実行中の詳細なログが表示される
-                                          return_intermediate_steps=True,  # 中間生成物を出力するか否か。Trueにすると、要約の途中経過が出力される
+                                          return_intermediate_steps=False,  # 中間生成物を出力するか否か。Trueにすると、要約の途中経過が出力される
                                           question_prompt=self.input_prompt,  # 要約を指示するテンプレート
                                           refine_prompt=self.refine_prompt)  # 要素追加と要約改善を行うテンプレート
 
