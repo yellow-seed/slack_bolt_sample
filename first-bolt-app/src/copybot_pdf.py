@@ -11,9 +11,7 @@ from dotenv import load_dotenv
 from langchain import LLMChain
 from langchain.callbacks.manager import CallbackManager
 from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (ChatPromptTemplate,
-                                    HumanMessagePromptTemplate,
-                                    SystemMessagePromptTemplate)
+from langchain.prompts.chat import ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate
 from openai.embeddings_utils import cosine_similarity, get_embedding
 from pdfminer.high_level import extract_pages, extract_text
 from pdfminer.layout import LTTextContainer
@@ -22,7 +20,7 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk.errors import SlackApiError
 from tqdm import tqdm
-from utility import SlackCallbackHandler
+from utility import SlackCallbackHandler, num_tokens
 
 load_dotenv()
 openai.api_key = os.environ.get("OPENAI_API_KEY")
@@ -70,11 +68,7 @@ class CoPyBotPDF:
 
         callback_manager = CallbackManager([SlackCallbackHandler(say_function)]) if self.is_streaming else None
 
-        return ChatOpenAI(temperature=0,
-                          openai_api_key=os.environ.get("OPENAI_API_KEY"),
-                          model_name="gpt-3.5-turbo",
-                          streaming=self.is_streaming,
-                          callback_manager=callback_manager)
+        return ChatOpenAI(temperature=0, openai_api_key=os.environ.get("OPENAI_API_KEY"), model_name="gpt-3.5-turbo", streaming=self.is_streaming, callback_manager=callback_manager)
 
     def register_listeners(self):
         @self.slack_app.message(re.compile("(PDF|pdf喰ってね|よろしく)"))
@@ -109,21 +103,21 @@ class CoPyBotPDF:
         @self.slack_app.message(re.compile("(質問だよ|聞くね)"))
         def recieve_question_about_pdf(body, say):
             say("なるほど。良い質問だね。回答を考えるからちょっと待ってね。")
-            query = body['event']['text']
+            query = body["event"]["text"]
             print("query: ", query)
             self.answer_about_pdf(query, say)
 
-        @self.slack_app.event('message')
+        @self.slack_app.event("message")
         def handle_file_share_events(body, say, client):
             # eventのsubtypeがfile_shareでない場合、メソッドを抜ける
-            if 'subtype' not in body['event'] or body['event']['subtype'] != 'file_share':
+            if "subtype" not in body["event"] or body["event"]["subtype"] != "file_share":
                 return
             try:
                 self.is_streaming
             except AttributeError:
                 self.is_streaming = 0
             say("ファイルを受け取ったよ。なかなか良いドキュメントだね。まずは内容を頭に入れるからちょっと待ってね。")
-            event = body['event']
+            event = body["event"]
             try:
                 self.process_file_share(event, say, client)
             except KeyError:
@@ -131,14 +125,13 @@ class CoPyBotPDF:
 
     def answer_about_pdf(self, query, say):
         # query文字列とそのembedding
-        query_embedding = get_embedding(query,
-                                        engine="text-embedding-ada-002")
+        query_embedding = get_embedding(query, engine="text-embedding-ada-002")
 
         # コサイン類似度を計算
-        self.pages_df['similarity'] = self.pages_df['embedding'].apply(lambda x: cosine_similarity(x, query_embedding))
+        self.pages_df["similarity"] = self.pages_df["embedding"].apply(lambda x: cosine_similarity(x, query_embedding))
 
         # 類似度の降順に並び替え
-        sorted_pages_df = self.pages_df.sort_values(by='similarity', ascending=False)
+        sorted_pages_df = self.pages_df.sort_values(by="similarity", ascending=False)
 
         # 上位n件のテキストを取得
         n = 3
@@ -157,16 +150,21 @@ class CoPyBotPDF:
             organized_text += SEPARATOR
             organized_text += s
 
+        if num_tokens(organized_text) > 4096:
+            # トークン数が上限にかかっている場合、強制的に文字数を減らす
+            # 少し余裕をみて3800文字までに設定
+            organized_text = organized_text[:3800]
+
         self.chain = self.create_chain(self.get_llm(say))
-        summary = self.chain.run(pdf_content=organized_text[:3600], query=query[5:])
+        summary = self.chain.run(pdf_content=organized_text, query=query[5:])
         say(summary)
 
     def process_file_share(self, event, say, client):
         try:
-            file_info = client.files_info(file=event['files'][0]['id']).data['file']
-            if file_info['name'][-4:] == '.pdf':
-                file_url = file_info['url_private_download']
-                header = {'Authorization': f"Bearer {os.environ.get('SLACK_BOT_TOKEN')}"}
+            file_info = client.files_info(file=event["files"][0]["id"]).data["file"]
+            if file_info["name"][-4:] == ".pdf":
+                file_url = file_info["url_private_download"]
+                header = {"Authorization": f"Bearer {os.environ.get('SLACK_BOT_TOKEN')}"}
                 response = requests.get(file_url, headers=header)
                 if response.status_code != 200:
                     print(f"Failed to download file: status code {response.status_code}")
@@ -185,10 +183,7 @@ class CoPyBotPDF:
                 for idx, page_text in enumerate(tqdm(pages_text)):
                     # https://github.com/openai/openai-cookbook/blob/main/examples/Semantic_text_search_using_embeddings.ipynb
                     # ベクトル埋め込みを行うためのOPENAI APIの関数
-                    embedding = get_embedding(
-                        page_text,
-                        engine="text-embedding-ada-002"
-                    )
+                    embedding = get_embedding(page_text, engine="text-embedding-ada-002")
                     # ページごとの情報をPageクラスのインスタンスに変換してリストに追加
                     page = Page(page_number=idx + 1, text=page_text, embedding=embedding)
                     pages.append(page)
@@ -208,7 +203,7 @@ class CoPyBotPDF:
         # extract_pages関数で各ページのレイアウトを表すLTPageオブジェクトのリストを取得
         for page_layout in extract_pages(pdf_file):
             # ページごとのテキスト内容
-            single_page_text = ''
+            single_page_text = ""
             for element in page_layout:
                 # LTTextContainer --> テキストを含むレイアウト要素を表す基本クラス
                 # isinstance --> elementがLTTextContainerのインスタンスかどうかを判定
@@ -216,7 +211,7 @@ class CoPyBotPDF:
                     # get_text() --> elementからテキストを取得
                     # 改行を置換して`single_page_text`に順位追加していくことで
                     # chunkデータに変換している
-                    single_page_text += element.get_text().replace('\n', ' ')
+                    single_page_text += element.get_text().replace("\n", " ")
             # １ページ１行のchunkデータになるようリストに追加
             pages_text.append(single_page_text)
         return pages_text
