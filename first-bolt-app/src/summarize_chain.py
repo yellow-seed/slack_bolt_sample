@@ -47,7 +47,7 @@ class Summarizer:
         # 入力されたテキストをドキュメント化
         self.text = [Document(page_content=str(t)) for t in texts]
         # ドキュメント化したデータから問題を引き起こす文字列を除外したうえでチェーンに渡す。
-        # "input_documents"はチェーンの入力変数名であり、この名前を変更するとチェーンの動作が変わる。
+        # "input_documents"はrefineモードでは固定の変数名
         response = self.chain(inputs={"input_documents": self.clean_string(self.text)},
                               return_only_outputs=True)
         return response
