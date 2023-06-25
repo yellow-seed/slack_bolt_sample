@@ -26,8 +26,8 @@ source .venv/bin/activate.fish
 python main.py
 
 ## dockerで立ち上げる場合
-docker build -t my_app .
-docker run -p 3000:3000 --env-file .env  my_app
+docker build -t my_app -f Dockerfile_dev .
+docker run -p 11111:11111 --env-file .env  my_app
 
 
 ## CloudRun
