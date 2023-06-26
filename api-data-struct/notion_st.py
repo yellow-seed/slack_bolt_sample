@@ -196,40 +196,23 @@ if __name__ == "__main__":
     api_key = os.environ.get("NOTION_API_KEY")
     notion = Client(auth=api_key)
 
-    db_parent = DbParent_ST(database_id)
-    page_title = PageTitle_ST(
-        [
-            RichText_ST(text=Text_ST("タイトル名")),
-        ]
-    )
-    page_text = PageText_ST(
-        [
-            RichText_ST(plain_text="テキストテスト", text=Text_ST("テキストテスト"), annotations=PageAnnotations_ST(color=Color_Const.red_background)),
-        ]
-    )
+    response_dict = notion.databases.query(**{"database_id": database_id})
+    response = DbQueryResp_ST(**response_dict)
+    resp_result_dict = response.results[0]
+    resp_result = DbQueryRespResult_ST(**resp_result_dict)
+    print(resp_result)
 
-    create_page = CreatePageInDb_ST(db_parent, {"タイトルヘッダー": page_title, "テキストヘッダー": page_text})  # ここはNotionの表によって変わるので、補助が出せない…
-    post_data = dataclasses.asdict(create_page)
-    notion.pages.create(**post_data)
-    # sleep(1)
+    result_dict = response_dict["results"][0]
+    page_parent_dict = result_dict["parent"]
+    page_properties_dict = result_dict["properties"]
+    page_text_dict = page_properties_dict["テキストヘッダー"]
 
-    # response_dict = notion.databases.query(**{"database_id": database_id})
-    # response = DbQueryResp_ST(**response_dict)
-    # resp_result_dict = response.results[0]
-    # resp_result = DbQueryRespResult_ST(**resp_result_dict)
-    # print(resp_result)
+    # page_parent = DbParent_ST(**page_parent_dict)
+    # print(page_parent.database_id)
+    # print(page_parent.type)
 
-    # result_dict = response_dict["results"][0]
-    # page_parent_dict = result_dict["parent"]
-    # page_properties_dict = result_dict["properties"]
-    # page_text_dict = page_properties_dict["テキストヘッダー"]
-
-    # # page_parent = DbParent_ST(**page_parent_dict)
-    # # print(page_parent.database_id)
-    # # print(page_parent.type)
-
-    # # page_title = PageTitle_ST(**page_properties_dict["タイトルヘッダー"])
-    # page_text = pursePageText(page_text_dict)
-    # print(page_text.rich_text[0].annotations.color)
-    # print(page_text.id)
-    # print(page_text.type)
+    # page_title = PageTitle_ST(**page_properties_dict["タイトルヘッダー"])
+    page_text = pursePageText(page_text_dict)
+    print(page_text.rich_text[0].annotations.color)
+    print(page_text.id)
+    print(page_text.type)
