@@ -17,8 +17,10 @@ class Text_ST:
 
 
 # https://developers.notion.com/reference/rich-text#the-annotation-object (color)
+# 定数であることを_Constで表現している。
+# もっと良い方法があれば教えてください。
 @dataclasses.dataclass(frozen=True)
-class Color_ST:
+class Color_Const:
     blue: str = "blue"
     brown: str = "brown"
     gray: str = "gray"
@@ -48,7 +50,7 @@ class PageAnnotations_ST:
     strikethrough: bool = False
     underline: bool = False
     code: bool = False
-    color: Color_ST = Color_ST.default
+    color: Color_Const = Color_Const.default
 
 
 # https://developers.notion.com/reference/rich-text
@@ -69,6 +71,7 @@ class RichText_ST:
 class PageText_ST:
     rich_text: list[RichText_ST]
     type: str = "rich_text"
+    id: str = None
 
 
 # https://developers.notion.com/reference/page-property-values#title
@@ -80,24 +83,41 @@ class PageTitle_ST:
 
 
 # https://developers.notion.com/reference/parent-object
+# 定数であることを_Constで表現している。
+# もっと良い方法があれば教えてください。
 @dataclasses.dataclass(frozen=True)
-class PageParentDb_ST:
-    database_id: str
-    type: str = "database_id"
+class PageParentType_Const:
+    database: str = "database_id"
+    page: str = "page_id"
 
 
 # https://developers.notion.com/reference/parent-object
 @dataclasses.dataclass(frozen=True)
-class PageParentPage_ST:
+class PageParent_ST:
+    type: PageParentType_Const
+    database_id: str = None
     page_id: str = None
-    type: str = "page_id"
+
+
+# https://developers.notion.com/reference/page-property-values
+# https://developers.notion.com/reference/property-object
+class PageProperties(object):
+    def __init__(self, headers: list, contents: list) -> None:
+        self.__dict = {}
+        for key, value in zip(headers, contents):
+            self.__dict[key] = value
+
+    # プロパティの値を取り出すメソッドを定義する
+    @property
+    def dict(self):
+        return self.__dict
 
 
 # https://developers.notion.com/reference/post-page
 @dataclasses.dataclass(frozen=True)
 class CreatePage_ST:
     parent: dict
-    properties: dict  # https://developers.notion.com/reference/page-property-values
+    properties: dict
 
 
 # https://developers.notion.com/reference/post-database-query
@@ -111,7 +131,7 @@ class DbQueryRespResult_ST:
     last_edited_by: dict
     cover: str
     icon: str
-    parent: PageParentDb_ST
+    parent: PageParent_ST
     archived: bool
     properties: dict
     url: str
@@ -122,33 +142,50 @@ class DbQueryRespResult_ST:
 @dataclasses.dataclass(frozen=True)
 class DbQueryResp_ST:
     object: str
-    results: list[dict]
+    results: list[DbQueryRespResult_ST]
     next_cursor: str
     has_more: bool
     type: str
     page: dict
 
 
-def pursePageText(page_text_dict: dict) -> PageText_ST:
-    if "id" in page_text_dict:
-        del page_text_dict["id"]
+def purseRichText(purse_target: dict) -> RichText_ST:
+    """
+    BlockのRich textのNotionデータをパースして出力する
+    BlockのRich text: https://developers.notion.com/reference/rich-text
 
-    page_text = PageText_ST(**page_text_dict)
-    rich_texts = []
-    for rich_text_elem in page_text.rich_text:
-        rich_texts.append(purseRichText(rich_text_elem))
+    Args:
+        purse_target (dict): Notionのデータ。辞書形式(Json)
 
-    ret = PageText_ST(rich_texts)
-    return ret
-
-
-def purseRichText(rich_text_dict: dict) -> RichText_ST:
-    rich_text = RichText_ST(**rich_text_dict)
+    Returns:
+        RichText_ST: パース結果
+    """
+    rich_text = RichText_ST(**purse_target)
     plain_text = rich_text.plain_text
     text = Text_ST(**rich_text.text)
     annotations = PageAnnotations_ST(**rich_text.annotations)
 
-    ret = RichText_ST(plain_text, text, annotations)
+    ret = RichText_ST(plain_text=plain_text, text=text, annotations=annotations)
+    return ret
+
+
+def pursePageText(purse_target: dict) -> PageText_ST:
+    """
+    Rich text型のNotionデータをパースして出力する
+    Rich text型: https://developers.notion.com/reference/page-property-values#rich-text
+
+    Args:
+        page_text_dict (dict): Notionのデータ。辞書形式(Json)
+
+    Returns:
+        PageText_ST: パース結果
+    """
+    page_text = PageText_ST(**purse_target)
+    rich_texts = []
+    for rich_text_elem in page_text.rich_text:
+        rich_texts.append(purseRichText(rich_text_elem))
+
+    ret = PageText_ST(rich_text=rich_texts, type=page_text.type, id=page_text.id)
     return ret
 
 
@@ -162,8 +199,11 @@ if __name__ == "__main__":
     api_key = os.environ.get("NOTION_API_KEY")
     notion = Client(auth=api_key)
 
-    page_parent = PageParentDb_ST(database_id=database_id, type="database_id")
+    page_parent = PageParent_ST(database_id=database_id, type=PageParentType_Const.database)
     page_parent_dict = dataclasses.asdict(page_parent)
+    # Database新規作成時にpage_idのKeyはあってはいけないので削除
+    if "page_id" in page_parent_dict:
+        del page_parent_dict["page_id"]
 
     page_title = PageTitle_ST(
         [
@@ -174,20 +214,22 @@ if __name__ == "__main__":
 
     page_text = PageText_ST(
         [
-            RichText_ST(plain_text="テキストテスト", text=Text_ST("テキストテスト"), annotations=PageAnnotations_ST(color=Color_ST.red_background)),
+            RichText_ST(plain_text="テキストテスト", text=Text_ST("テキストテスト"), annotations=PageAnnotations_ST(color=Color_Const.red_background)),
         ]
     )
     page_text_dict = dataclasses.asdict(page_text)
+    # 新規作成時にIDのKeyはあってはいけないので削除
+    if "id" in page_text_dict:
+        del page_text_dict["id"]
 
-    page_text = pursePageText(page_text_dict)
-    print(page_text.rich_text[0].annotations.color)
+    headers = ["タイトルヘッダー", "テキストヘッダー"]
+    contents = [page_title_dict, page_text_dict]
+    page_properties = PageProperties(headers, contents)
 
-    page_properties = {"タイトルヘッダー": page_title_dict, "テキストヘッダー": page_text_dict}
-    create_page_struct = CreatePage_ST(page_parent, page_properties)
+    # {"タイトルヘッダー": page_title_dict, "テキストヘッダー": page_text_dict}
+    create_page_struct = CreatePage_ST(page_parent_dict, page_properties.dict)
     post_data = dataclasses.asdict(create_page_struct)
-    # print(post_data)
-
-    # notion.pages.create(**post_data)
+    notion.pages.create(**post_data)
     # sleep(1)
 
     # response_dict = notion.databases.query(**{"database_id": database_id})
@@ -195,17 +237,18 @@ if __name__ == "__main__":
     # resp_result_dict = response.results[0]
     # resp_result = DbQueryRespResult_ST(**resp_result_dict)
     # print(resp_result)
-    # print(resp_result.parent.database_id)
 
     # result_dict = response_dict["results"][0]
     # page_parent_dict = result_dict["parent"]
     # page_properties_dict = result_dict["properties"]
     # page_text_dict = page_properties_dict["テキストヘッダー"]
 
-    # page_parent = PageParentDb_ST(**page_parent_dict)
-    # print(page_parent.database_id)
-    # print(page_parent.type)
+    # # page_parent = PageParent_ST(**page_parent_dict)
+    # # print(page_parent.database_id)
+    # # print(page_parent.type)
 
-    # page_title = PageTitle_ST(**page_properties_dict["タイトルヘッダー"])
+    # # page_title = PageTitle_ST(**page_properties_dict["タイトルヘッダー"])
     # page_text = pursePageText(page_text_dict)
     # print(page_text.rich_text[0].annotations.color)
+    # print(page_text.id)
+    # print(page_text.type)
