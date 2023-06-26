@@ -3,7 +3,6 @@
 from dotenv import load_dotenv
 from rich import print
 import dataclasses
-from typing import List
 
 from notion_client import Client
 from time import sleep
@@ -68,14 +67,14 @@ class RichText_ST:
 # https://developers.notion.com/reference/page-property-values#rich-text
 @dataclasses.dataclass(frozen=True)
 class PageText_ST:
-    rich_text: List[RichText_ST]
+    rich_text: list[RichText_ST]
     type: str = "rich_text"
 
 
 # https://developers.notion.com/reference/page-property-values#title
 @dataclasses.dataclass(frozen=True)
 class PageTitle_ST:
-    title: List[RichText_ST]
+    title: list[RichText_ST]
     id: str = "title"
     type: str = "title"
 
@@ -123,7 +122,7 @@ class DbQueryRespResult_ST:
 @dataclasses.dataclass(frozen=True)
 class DbQueryResp_ST:
     object: str
-    results: List[dict]
+    results: list[dict]
     next_cursor: str
     has_more: bool
     type: str
