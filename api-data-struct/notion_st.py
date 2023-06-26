@@ -56,9 +56,9 @@ class PageAnnotations_ST:
 # https://developers.notion.com/reference/rich-text
 @dataclasses.dataclass(frozen=True)
 class RichText_ST:
-    plain_text: str
     text: Text_ST
-    annotations: PageAnnotations_ST
+    annotations: PageAnnotations_ST = PageAnnotations_ST()
+    plain_text: str = "undefined"
     href: str = None
     type: str = "text"
 
@@ -71,7 +71,7 @@ class RichText_ST:
 class PageText_ST:
     rich_text: list[RichText_ST]
     type: str = "rich_text"
-    id: str = None
+    id: str = "undefined"
 
 
 # https://developers.notion.com/reference/page-property-values#title
@@ -82,26 +82,23 @@ class PageTitle_ST:
     type: str = "title"
 
 
-# https://developers.notion.com/reference/parent-object
-# 定数であることを_Constで表現している。
-# もっと良い方法があれば教えてください。
+# https://developers.notion.com/reference/parent-object#database-parent
 @dataclasses.dataclass(frozen=True)
-class PageParentType_Const:
-    database: str = "database_id"
-    page: str = "page_id"
+class DbParent_ST:
+    database_id: str
+    type: str = "database_id"
 
 
-# https://developers.notion.com/reference/parent-object
+# https://developers.notion.com/reference/parent-object#page-parent
 @dataclasses.dataclass(frozen=True)
 class PageParent_ST:
-    type: PageParentType_Const
-    database_id: str = None
-    page_id: str = None
+    page_id: str
+    type: str = "page_id"
 
 
-# https://developers.notion.com/reference/page-property-values
 # https://developers.notion.com/reference/property-object
-class PageProperties(object):
+@dataclasses.dataclass(frozen=True)
+class PageProperties_ST(object):
     def __init__(self, headers: list, contents: list) -> None:
         self.__dict = {}
         for key, value in zip(headers, contents):
@@ -115,8 +112,8 @@ class PageProperties(object):
 
 # https://developers.notion.com/reference/post-page
 @dataclasses.dataclass(frozen=True)
-class CreatePage_ST:
-    parent: dict
+class CreatePageInDb_ST:
+    parent: DbParent_ST
     properties: dict
 
 
@@ -131,7 +128,7 @@ class DbQueryRespResult_ST:
     last_edited_by: dict
     cover: str
     icon: str
-    parent: PageParent_ST
+    parent: DbParent_ST
     archived: bool
     properties: dict
     url: str
@@ -199,36 +196,20 @@ if __name__ == "__main__":
     api_key = os.environ.get("NOTION_API_KEY")
     notion = Client(auth=api_key)
 
-    page_parent = PageParent_ST(database_id=database_id, type=PageParentType_Const.database)
-    page_parent_dict = dataclasses.asdict(page_parent)
-    # Database新規作成時にpage_idのKeyはあってはいけないので削除
-    if "page_id" in page_parent_dict:
-        del page_parent_dict["page_id"]
-
+    db_parent = DbParent_ST(database_id)
     page_title = PageTitle_ST(
         [
-            RichText_ST(plain_text="test", text=Text_ST("test"), annotations=PageAnnotations_ST()),
+            RichText_ST(text=Text_ST("タイトル名")),
         ]
     )
-    page_title_dict = dataclasses.asdict(page_title)
-
     page_text = PageText_ST(
         [
             RichText_ST(plain_text="テキストテスト", text=Text_ST("テキストテスト"), annotations=PageAnnotations_ST(color=Color_Const.red_background)),
         ]
     )
-    page_text_dict = dataclasses.asdict(page_text)
-    # 新規作成時にIDのKeyはあってはいけないので削除
-    if "id" in page_text_dict:
-        del page_text_dict["id"]
 
-    headers = ["タイトルヘッダー", "テキストヘッダー"]
-    contents = [page_title_dict, page_text_dict]
-    page_properties = PageProperties(headers, contents)
-
-    # {"タイトルヘッダー": page_title_dict, "テキストヘッダー": page_text_dict}
-    create_page_struct = CreatePage_ST(page_parent_dict, page_properties.dict)
-    post_data = dataclasses.asdict(create_page_struct)
+    create_page = CreatePageInDb_ST(db_parent, {"タイトルヘッダー": page_title, "テキストヘッダー": page_text})  # ここはNotionの表によって変わるので、補助が出せない…
+    post_data = dataclasses.asdict(create_page)
     notion.pages.create(**post_data)
     # sleep(1)
 
@@ -243,7 +224,7 @@ if __name__ == "__main__":
     # page_properties_dict = result_dict["properties"]
     # page_text_dict = page_properties_dict["テキストヘッダー"]
 
-    # # page_parent = PageParent_ST(**page_parent_dict)
+    # # page_parent = DbParent_ST(**page_parent_dict)
     # # print(page_parent.database_id)
     # # print(page_parent.type)
 
