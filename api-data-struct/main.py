@@ -6,6 +6,7 @@ import dataclasses
 from notion_client import Client
 from time import sleep
 
+# 実装した構造化スクリプト
 import notion_st
 
 if __name__ == "__main__":
@@ -31,3 +32,6 @@ if __name__ == "__main__":
     create_page = notion_st.CreatePageInDb_ST(db_parent, {"タイトルヘッダー": page_title, "テキストヘッダー": page_text})  # ここはNotionの表によって変わるので、補助が出せない…
     post_data = dataclasses.asdict(create_page)
     notion.pages.create(**post_data)
+
+    sleep(1)
+    print(post_data)

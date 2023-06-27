@@ -5,7 +5,6 @@ from rich import print
 import dataclasses
 
 from notion_client import Client
-from time import sleep
 
 
 # ここから基本要素
@@ -63,9 +62,35 @@ class RichText_ST:
     type: str = "text"
 
 
+# https://developers.notion.com/reference/user#all-users (type)
+# 定数であることを_Constで表現している。
+# もっと良い方法があれば教えてください。
+@dataclasses.dataclass(frozen=True)
+class UsersType_Const:
+    person: str = "person"
+    bot: str = "bot"
+
+
+# https://developers.notion.com/reference/user#all-users
+@dataclasses.dataclass(frozen=True)
+class AllUsers_ST:
+    id: str
+    object: str = "user"
+    type: UsersType_Const = UsersType_Const.person
+    name: str = None
+    avatar_url: str = None
+
+
+# https://developers.notion.com/reference/emoji-object
+@dataclasses.dataclass(frozen=True)
+class Emoji_ST:
+    emoji: str = "😻"
+    type: str = "emoji"
+
+
 # ここまで基本要素
 # ここから下はPageの要素
-# 基本要素の組み合わせで成り立っている。
+# Pageの要素は上の基本要素の組み合わせで成り立っている。
 # https://developers.notion.com/reference/page-property-values#rich-text
 @dataclasses.dataclass(frozen=True)
 class PageText_ST:
@@ -96,20 +121,7 @@ class PageParent_ST:
     type: str = "page_id"
 
 
-# https://developers.notion.com/reference/property-object
-@dataclasses.dataclass(frozen=True)
-class PageProperties_ST(object):
-    def __init__(self, headers: list, contents: list) -> None:
-        self.__dict = {}
-        for key, value in zip(headers, contents):
-            self.__dict[key] = value
-
-    # プロパティの値を取り出すメソッドを定義する
-    @property
-    def dict(self):
-        return self.__dict
-
-
+# ここからはENDPOINTSの要素
 # https://developers.notion.com/reference/post-page
 @dataclasses.dataclass(frozen=True)
 class CreatePageInDb_ST:
@@ -118,16 +130,17 @@ class CreatePageInDb_ST:
 
 
 # https://developers.notion.com/reference/post-database-query
+# RESPONSE["results"]の要素
 @dataclasses.dataclass(frozen=True)
-class DbQueryRespResult_ST:
+class DbQueryResResult_ST:
     object: str
     id: str
     created_time: str
     last_edited_time: str
-    created_by: dict
-    last_edited_by: dict
+    created_by: AllUsers_ST
+    last_edited_by: AllUsers_ST
     cover: str
-    icon: str
+    icon: Emoji_ST
     parent: DbParent_ST
     archived: bool
     properties: dict
@@ -136,20 +149,22 @@ class DbQueryRespResult_ST:
 
 
 # https://developers.notion.com/reference/post-database-query
+# RESPONSEの要素
 @dataclasses.dataclass(frozen=True)
-class DbQueryResp_ST:
+class DbQueryRes_ST:
     object: str
-    results: list[DbQueryRespResult_ST]
+    results: list[DbQueryResResult_ST]
     next_cursor: str
     has_more: bool
     type: str
     page: dict
 
 
+# ここからパーサーの関数を定義
 def purseRichText(purse_target: dict) -> RichText_ST:
     """
     BlockのRich textのNotionデータをパースして出力する
-    BlockのRich text: https://developers.notion.com/reference/rich-text
+    参照: https://developers.notion.com/reference/rich-text
 
     Args:
         purse_target (dict): Notionのデータ。辞書形式(Json)
@@ -157,22 +172,24 @@ def purseRichText(purse_target: dict) -> RichText_ST:
     Returns:
         RichText_ST: パース結果
     """
-    rich_text = RichText_ST(**purse_target)
-    plain_text = rich_text.plain_text
-    text = Text_ST(**rich_text.text)
-    annotations = PageAnnotations_ST(**rich_text.annotations)
-
-    ret = RichText_ST(plain_text=plain_text, text=text, annotations=annotations)
+    rich_text = RichText_ST(**purse_target)  # 辞書からクラスに戻す時はアンパックを使う: https://qiita.com/ttyszk/items/01934dc42cbd4f6665d2
+    ret = RichText_ST(
+        plain_text=rich_text.plain_text,
+        text=Text_ST(**rich_text.text),
+        annotations=PageAnnotations_ST(**rich_text.annotations),
+        href=rich_text.href,
+        type=rich_text.type,
+    )
     return ret
 
 
 def pursePageText(purse_target: dict) -> PageText_ST:
     """
     Rich text型のNotionデータをパースして出力する
-    Rich text型: https://developers.notion.com/reference/page-property-values#rich-text
+    参照: https://developers.notion.com/reference/page-property-values#rich-text
 
     Args:
-        page_text_dict (dict): Notionのデータ。辞書形式(Json)
+        page_text_dict (dict): Notionのデータ。辞書形式(JSON)
 
     Returns:
         PageText_ST: パース結果
@@ -182,7 +199,105 @@ def pursePageText(purse_target: dict) -> PageText_ST:
     for rich_text_elem in page_text.rich_text:
         rich_texts.append(purseRichText(rich_text_elem))
 
-    ret = PageText_ST(rich_text=rich_texts, type=page_text.type, id=page_text.id)
+    ret = PageText_ST(
+        rich_text=rich_texts,
+        type=page_text.type,
+        id=page_text.id,
+    )
+    return ret
+
+
+def purseDbParent(purse_target: dict) -> DbParent_ST:
+    """
+    Database parent型のNotionデータをパースして出力する
+    参照: https://developers.notion.com/reference/parent-object#database-parent
+
+    Args:
+        purse_target (dict): Notionのデータ。辞書形式(JSON)
+
+    Returns:
+        PageParent_ST: パース結果
+    """
+    page_parent = DbParent_ST(**purse_target)
+    ret = DbParent_ST(database_id=page_parent.database_id, type=page_parent.type)
+    return ret
+
+
+def pursePageParent(purse_target: dict) -> PageParent_ST:
+    """
+    Page parent型のNotionデータをパースして出力する
+    参照: https://developers.notion.com/reference/parent-object#page-parent
+
+    Args:
+        purse_target (dict): Notionのデータ。辞書形式(JSON)
+
+    Returns:
+        PageParent_ST: パース結果
+    """
+    page_parent = PageParent_ST(**purse_target)
+    ret = PageParent_ST(page_id=page_parent.page_id, type=page_parent.type)
+    return ret
+
+
+def purseDbQueryRes(purse_target: dict) -> DbQueryRes_ST:
+    """
+    database queryのRESPONSEのNotionデータをパースして出力する
+    参照: https://developers.notion.com/reference/post-database-query
+
+    Args:
+        purse_target (dict): Notionのデータ。辞書形式(JSON)
+
+    Returns:
+        DbQueryRes_ST: パース結果
+    """
+    res_result = DbQueryRes_ST(**purse_target)
+    results_list = []
+    for result in res_result.results:
+        results_list.append(purseDbQueryRespResult(result))
+
+    ret = DbQueryRes_ST(
+        object=res_result.object,
+        results=results_list,
+        next_cursor=res_result.next_cursor,
+        has_more=res_result.has_more,
+        type=res_result.type,
+        page=res_result.page,
+    )
+    return ret
+
+
+def purseDbQueryRespResult(purse_target: dict) -> DbQueryResResult_ST:
+    """
+    database queryのRESPONSE["results"]のNotionデータをパースして出力する
+    参照: https://developers.notion.com/reference/post-database-query
+
+    Args:
+        purse_target (dict): Notionのデータ。辞書形式(JSON)
+
+    Returns:
+        DbQueryResResult_ST: パース結果
+    """
+    res_result = DbQueryResResult_ST(**purse_target)
+    if res_result.icon is not None:
+        icon = Emoji_ST(**res_result.icon)
+    else:
+        icon = None
+
+    ret = DbQueryResResult_ST(
+        object=res_result.object,
+        id=res_result.id,
+        created_time=res_result.created_time,
+        last_edited_time=res_result.last_edited_time,
+        created_by=AllUsers_ST(**res_result.created_by),
+        last_edited_by=AllUsers_ST(**res_result.last_edited_by),
+        cover=res_result.cover,
+        icon=icon,
+        parent=DbParent_ST(**res_result.parent),
+        archived=res_result.archived,
+        properties=res_result.properties,
+        url=res_result.url,
+        public_url=res_result.public_url,
+    )
     return ret
 
 
@@ -197,15 +312,21 @@ if __name__ == "__main__":
     notion = Client(auth=api_key)
 
     response_dict = notion.databases.query(**{"database_id": database_id})
-    response = DbQueryResp_ST(**response_dict)
+    response = DbQueryRes_ST(**response_dict)
     resp_result_dict = response.results[0]
-    resp_result = DbQueryRespResult_ST(**resp_result_dict)
-    print(resp_result)
+    resp_result = DbQueryResResult_ST(**resp_result_dict)
+    # print(resp_result)
+    db_query_res = purseDbQueryRes(response_dict)
 
     result_dict = response_dict["results"][0]
     page_parent_dict = result_dict["parent"]
     page_properties_dict = result_dict["properties"]
     page_text_dict = page_properties_dict["テキストヘッダー"]
+
+    print(db_query_res.results[0].parent)
+    print(db_query_res.results[0].id)
+    print(db_query_res.results[0].created_by)
+    print(db_query_res.results[0].properties)
 
     # page_parent = DbParent_ST(**page_parent_dict)
     # print(page_parent.database_id)
@@ -216,3 +337,5 @@ if __name__ == "__main__":
     print(page_text.rich_text[0].annotations.color)
     print(page_text.id)
     print(page_text.type)
+    print(page_text.rich_text[0].href)
+    print(page_text.rich_text[0].type)
