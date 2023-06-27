@@ -312,27 +312,20 @@ if __name__ == "__main__":
     notion = Client(auth=api_key)
 
     response_dict = notion.databases.query(**{"database_id": database_id})
-    response = DbQueryRes_ST(**response_dict)
-    resp_result_dict = response.results[0]
-    resp_result = DbQueryResResult_ST(**resp_result_dict)
-    # print(resp_result)
     db_query_res = purseDbQueryRes(response_dict)
-
-    result_dict = response_dict["results"][0]
-    page_parent_dict = result_dict["parent"]
-    page_properties_dict = result_dict["properties"]
+    page_properties_dict = db_query_res.results[0].properties
     page_text_dict = page_properties_dict["テキストヘッダー"]
 
-    print(db_query_res.results[0].parent)
-    print(db_query_res.results[0].id)
-    print(db_query_res.results[0].created_by)
+    # print(db_query_res.results[0].parent)
+    # print(db_query_res.results[0].id)
+    # print(db_query_res.results[0].created_by)
     print(db_query_res.results[0].properties)
 
     # page_parent = DbParent_ST(**page_parent_dict)
     # print(page_parent.database_id)
     # print(page_parent.type)
 
-    # page_title = PageTitle_ST(**page_properties_dict["タイトルヘッダー"])
+    page_title = PageTitle_ST(**page_properties_dict["タイトルヘッダー"])
     page_text = pursePageText(page_text_dict)
     print(page_text.rich_text[0].annotations.color)
     print(page_text.id)
