@@ -83,7 +83,9 @@
 				// Flake8 Lint
 				"ms-python.flake8",
 				// Black Formatter
-				"ms-python.black-formatter"
+				"ms-python.black-formatter",
+				// Annotationコメントを簡単に検索できる拡張
+				"Gruntfuggly.todo-tree"
 			]
 			// devcontainer.jsonをサポートするツールが、関連するツールウィンドウを閉じる/シャットダウンする際に、コンテナを停止させるかどうかを示します。
 			// 値は、none、stopContainer（イメージまたはDockerfileのデフォルト）、stopCompose（Docker Composeのデフォルト）です。
