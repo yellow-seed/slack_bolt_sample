@@ -248,6 +248,8 @@ def pursePagePropaty(purse_target: dict) -> PageText_ST | PageTitle_ST | PageUrl
     return ret
 
 
+# 以降Propaties関連のパーサーでPropatriesのtypeまで指定
+# 型ヒントで提示される選択肢が必要十分になる。
 def pursePageMultiSelect(purse_target: dict) -> PageMultiSelect_ST:
     """
     Multi Select型のNotionデータをパースして出力する
@@ -276,8 +278,6 @@ def pursePageMultiSelect(purse_target: dict) -> PageMultiSelect_ST:
     return ret
 
 
-# Propaties関連のパーサーでPropatriesのtypeまで指定
-# 型ヒントで提示される選択肢が必要十分になる。
 def pursePageText(purse_target: dict) -> PageText_ST:
     """
     Rich text型のNotionデータをパースして出力する
