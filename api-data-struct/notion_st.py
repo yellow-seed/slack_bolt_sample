@@ -107,6 +107,13 @@ class PageTitle_ST:
     type: str = "title"
 
 
+# https://developers.notion.com/reference/page-property-values#url
+@dataclasses.dataclass(frozen=True)
+class PageUrl_ST:
+    url: str
+
+
+# ここから下はParentの要素
 # https://developers.notion.com/reference/parent-object#database-parent
 @dataclasses.dataclass(frozen=True)
 class DbParent_ST:
@@ -188,7 +195,7 @@ def __purseRichText(purse_target: dict) -> RichText_ST:
 
 
 # Propaties関連のパーサー
-def pursePagePropaty(purse_target: dict) -> PageText_ST | PageTitle_ST:
+def pursePagePropaty(purse_target: dict) -> PageText_ST | PageTitle_ST | PageUrl_ST:
     """
     PropatyのNotionデータをパースして出力する。
     参照: https://developers.notion.com/reference/page-property-values
@@ -204,6 +211,8 @@ def pursePagePropaty(purse_target: dict) -> PageText_ST | PageTitle_ST:
         ret = pursePageTitle(purse_target)
     elif "rich_text" == purse_target["type"]:
         ret = pursePageText(purse_target)
+    elif "url" == purse_target["type"]:
+        ret = pursePageUrl(purse_target)
 
     return ret
 
@@ -262,6 +271,27 @@ def pursePageTitle(purse_target: dict) -> PageTitle_ST:
         title=title_texts,
         type=page_title.type,
         id=page_title.id,
+    )
+    return ret
+
+
+def pursePageUrl(purse_target: dict) -> PageUrl_ST:
+    """
+    Title型のNotionデータをパースして出力する
+    参照: https://developers.notion.com/reference/page-property-values#url
+
+    Args:
+        purse_target (dict): Notionのデータ。辞書形式(JSON)
+
+    Returns:
+        PageTitle_ST: パース結果
+    """
+    # 辞書からクラスに戻す時はアンパックを使う
+    page_url = PageUrl_ST(**purse_target)
+
+    # アンパックした要素をデータ構造に当てはめる
+    ret = PageTitle_ST(
+        url=page_url.url,
     )
     return ret
 
