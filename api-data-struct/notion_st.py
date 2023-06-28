@@ -65,8 +65,15 @@ class RichText_ST:
 # https://developers.notion.com/reference/page-property-values#select
 @dataclasses.dataclass(frozen=True)
 class Select_ST:
+    id: str  # 既存のIDを指定する
+    color: Color_Const  # IDに紐づいている色を指定する
+    name: str = "undefined"
+
+
+@dataclasses.dataclass(frozen=True)
+# 新しくセレクタを作りたい場合にこちらを選択する
+class NewSelect_ST:
     name: str
-    id: str = "undefined"
     color: Color_Const = Color_Const.default
 
 
@@ -126,7 +133,7 @@ class PageUrl_ST:
 # https://developers.notion.com/reference/page-property-values#multi-select
 @dataclasses.dataclass(frozen=True)
 class PageMultiSelect_ST:
-    multi_select: list[Select_ST]
+    multi_select: list[Select_ST | NewSelect_ST]
     type: str = "multi_select"
     id: str = "undefined"
 
@@ -213,7 +220,7 @@ def __purseRichText(purse_target: dict) -> RichText_ST:
 
 
 # Propaties関連のパーサー
-def pursePagePropaty(purse_target: dict) -> PageText_ST | PageTitle_ST | PageUrl_ST:
+def pursePagePropaty(purse_target: dict) -> PageText_ST | PageTitle_ST | PageUrl_ST | PageMultiSelect_ST:
     """
     PropatyのNotionデータをパースして出力する。
     参照: https://developers.notion.com/reference/page-property-values
@@ -233,6 +240,10 @@ def pursePagePropaty(purse_target: dict) -> PageText_ST | PageTitle_ST | PageUrl
         ret = pursePageUrl(purse_target)
     elif "multi_select" == purse_target["type"]:
         ret = pursePageMultiSelect(purse_target)
+    else:
+        print("Propertyのtypeが実装されていません。")
+        print("type:", purse_target["type"])
+        ret = None
 
     return ret
 
@@ -425,12 +436,40 @@ if __name__ == "__main__":
     api_key = os.environ.get("NOTION_API_KEY")
     notion = Client(auth=api_key)
 
-    response_dict = notion.databases.query(**{"database_id": database_id})
-    db_query_res = purseDbQueryRes(response_dict)
-    print(db_query_res.results[0].properties)
-
-    page_text = pursePageTitle(db_query_res.results[0].properties["userid"])
-    page_title = pursePageText(db_query_res.results[0].properties["活動報告"])
-    page_multi_select = pursePageMultiSelect(db_query_res.results[0].properties["タグ"])
-
-    print(page_multi_select.multi_select[0].color)
+    create_page = CreatePageInDb_ST(
+        parent=DbParent_ST(database_id),
+        properties={  # ここはNotionの表によって変わるので、補助が出せない…
+            "userid": PageTitle_ST(
+                [
+                    RichText_ST(
+                        Text_ST("abcdefg"),
+                    )
+                ]
+            ),
+            "活動報告": PageText_ST(
+                [
+                    RichText_ST(
+                        Text_ST("5Q-11"),
+                        PageAnnotations_ST(italic=True, color=Color_Const.pink),
+                    )
+                ]
+            ),
+            "タグ": PageMultiSelect_ST(
+                [
+                    Select_ST(
+                        id="e2804533-6825-4c61-9350-e3e4e6cf858e",
+                        color=Color_Const.brown,
+                    )
+                ]
+            ),
+            "内容": PageText_ST(
+                [
+                    RichText_ST(
+                        Text_ST("投稿テスト"),
+                    )
+                ]
+            ),
+        },
+    )
+    post_data = dataclasses.asdict(create_page)
+    # notion.pages.create(**post_data)
