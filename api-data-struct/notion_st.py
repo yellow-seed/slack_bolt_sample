@@ -161,7 +161,8 @@ class DbQueryRes_ST:
 
 
 # ここからパーサーの関数を定義
-def purseRichText(purse_target: dict) -> RichText_ST:
+# 基本要素
+def __purseRichText(purse_target: dict) -> RichText_ST:
     """
     BlockのRich textのNotionデータをパースして出力する
     参照: https://developers.notion.com/reference/rich-text
@@ -172,7 +173,10 @@ def purseRichText(purse_target: dict) -> RichText_ST:
     Returns:
         RichText_ST: パース結果
     """
-    rich_text = RichText_ST(**purse_target)  # 辞書からクラスに戻す時はアンパックを使う: https://qiita.com/ttyszk/items/01934dc42cbd4f6665d2
+    # 辞書からクラスに戻す時はアンパックを使う: https://qiita.com/ttyszk/items/01934dc42cbd4f6665d2
+    rich_text = RichText_ST(**purse_target)
+
+    # アンパックした要素をデータ構造に当てはめる
     ret = RichText_ST(
         plain_text=rich_text.plain_text,
         text=Text_ST(**rich_text.text),
@@ -183,22 +187,49 @@ def purseRichText(purse_target: dict) -> RichText_ST:
     return ret
 
 
+# Propaties関連のパーサー
+def pursePagePropaty(purse_target: dict) -> PageText_ST | PageTitle_ST:
+    """
+    PropatyのNotionデータをパースして出力する。
+    参照: https://developers.notion.com/reference/page-property-values
+    返り値がUnion型なので、型ヒントは不要な選択肢が含まれる。
+
+    Args:
+        purse_target (dict): Notionのデータ。辞書形式(JSON)
+
+    Returns:
+        PageText_ST: パース結果
+    """
+    if "title" == purse_target["type"]:
+        ret = pursePageTitle(purse_target)
+    elif "rich_text" == purse_target["type"]:
+        ret = pursePageText(purse_target)
+
+    return ret
+
+
+# Propaties関連のパーサーでPropatriesのtypeまで指定
+# 型ヒントで提示される選択肢が必要十分になる。
 def pursePageText(purse_target: dict) -> PageText_ST:
     """
     Rich text型のNotionデータをパースして出力する
     参照: https://developers.notion.com/reference/page-property-values#rich-text
 
     Args:
-        page_text_dict (dict): Notionのデータ。辞書形式(JSON)
+        purse_target (dict): Notionのデータ。辞書形式(JSON)
 
     Returns:
         PageText_ST: パース結果
     """
+    # 辞書からクラスに戻す時はアンパックを使う
     page_text = PageText_ST(**purse_target)
+
+    # API仕様を見るとField:rich_textはRich Textが配列になっていることが分かる
     rich_texts = []
     for rich_text_elem in page_text.rich_text:
-        rich_texts.append(purseRichText(rich_text_elem))
+        rich_texts.append(__purseRichText(rich_text_elem))
 
+    # アンパックした要素をデータ構造に当てはめる
     ret = PageText_ST(
         rich_text=rich_texts,
         type=page_text.type,
@@ -207,38 +238,35 @@ def pursePageText(purse_target: dict) -> PageText_ST:
     return ret
 
 
-def purseDbParent(purse_target: dict) -> DbParent_ST:
+def pursePageTitle(purse_target: dict) -> PageTitle_ST:
     """
-    Database parent型のNotionデータをパースして出力する
-    参照: https://developers.notion.com/reference/parent-object#database-parent
+    Title型のNotionデータをパースして出力する
+    参照: https://developers.notion.com/reference/page-property-values#title
 
     Args:
         purse_target (dict): Notionのデータ。辞書形式(JSON)
 
     Returns:
-        PageParent_ST: パース結果
+        PageTitle_ST: パース結果
     """
-    page_parent = DbParent_ST(**purse_target)
-    ret = DbParent_ST(database_id=page_parent.database_id, type=page_parent.type)
+    # 辞書からクラスに戻す時はアンパックを使う
+    page_title = PageTitle_ST(**purse_target)
+
+    # API仕様を見るとField:titleはRich Textが配列になっていることが分かる
+    title_texts = []
+    for title_elem in page_title.title:
+        title_texts.append(__purseRichText(title_elem))
+
+    # アンパックした要素をデータ構造に当てはめる
+    ret = PageTitle_ST(
+        title=title_texts,
+        type=page_title.type,
+        id=page_title.id,
+    )
     return ret
 
 
-def pursePageParent(purse_target: dict) -> PageParent_ST:
-    """
-    Page parent型のNotionデータをパースして出力する
-    参照: https://developers.notion.com/reference/parent-object#page-parent
-
-    Args:
-        purse_target (dict): Notionのデータ。辞書形式(JSON)
-
-    Returns:
-        PageParent_ST: パース結果
-    """
-    page_parent = PageParent_ST(**purse_target)
-    ret = PageParent_ST(page_id=page_parent.page_id, type=page_parent.type)
-    return ret
-
-
+# Endpoints関連
 def purseDbQueryRes(purse_target: dict) -> DbQueryRes_ST:
     """
     database queryのRESPONSEのNotionデータをパースして出力する
@@ -250,11 +278,15 @@ def purseDbQueryRes(purse_target: dict) -> DbQueryRes_ST:
     Returns:
         DbQueryRes_ST: パース結果
     """
+    # 辞書からクラスに戻す時はアンパックを使う
     res_result = DbQueryRes_ST(**purse_target)
+
+    # API仕様を見るとField:resultsはQuery結果が配列になっていることが分かる
     results_list = []
     for result in res_result.results:
-        results_list.append(purseDbQueryRespResult(result))
+        results_list.append(__purseDbQueryResResult(result))
 
+    # アンパックした要素をデータ構造に当てはめる
     ret = DbQueryRes_ST(
         object=res_result.object,
         results=results_list,
@@ -266,7 +298,7 @@ def purseDbQueryRes(purse_target: dict) -> DbQueryRes_ST:
     return ret
 
 
-def purseDbQueryRespResult(purse_target: dict) -> DbQueryResResult_ST:
+def __purseDbQueryResResult(purse_target: dict) -> DbQueryResResult_ST:
     """
     database queryのRESPONSE["results"]のNotionデータをパースして出力する
     参照: https://developers.notion.com/reference/post-database-query
@@ -277,12 +309,16 @@ def purseDbQueryRespResult(purse_target: dict) -> DbQueryResResult_ST:
     Returns:
         DbQueryResResult_ST: パース結果
     """
+    # 辞書からクラスに戻す時はアンパックを使う
     res_result = DbQueryResResult_ST(**purse_target)
+
+    # Field:iconはAPI結果でNoneの場合がある
     if res_result.icon is not None:
         icon = Emoji_ST(**res_result.icon)
     else:
         icon = None
 
+    # アンパックした要素をデータ構造に当てはめる
     ret = DbQueryResResult_ST(
         object=res_result.object,
         id=res_result.id,
@@ -294,7 +330,7 @@ def purseDbQueryRespResult(purse_target: dict) -> DbQueryResResult_ST:
         icon=icon,
         parent=DbParent_ST(**res_result.parent),
         archived=res_result.archived,
-        properties=res_result.properties,
+        properties=res_result.properties,  # propertiesの中身はNotionの表の状態によって変わるため、辞書型(Json)のままとする
         url=res_result.url,
         public_url=res_result.public_url,
     )
@@ -304,7 +340,7 @@ def purseDbQueryRespResult(purse_target: dict) -> DbQueryResResult_ST:
 if __name__ == "__main__":
     import os
 
-    database_id = "10f2085cf70a4c939b2710e883eb161a"
+    database_id = "01be2b6ddec849d199e6c4f555accc98"
 
     # 秘密情報をロード
     load_dotenv()
@@ -313,22 +349,7 @@ if __name__ == "__main__":
 
     response_dict = notion.databases.query(**{"database_id": database_id})
     db_query_res = purseDbQueryRes(response_dict)
-    page_properties_dict = db_query_res.results[0].properties
-    page_text_dict = page_properties_dict["テキストヘッダー"]
-
-    # print(db_query_res.results[0].parent)
-    # print(db_query_res.results[0].id)
-    # print(db_query_res.results[0].created_by)
     print(db_query_res.results[0].properties)
 
-    # page_parent = DbParent_ST(**page_parent_dict)
-    # print(page_parent.database_id)
-    # print(page_parent.type)
-
-    page_title = PageTitle_ST(**page_properties_dict["タイトルヘッダー"])
-    page_text = pursePageText(page_text_dict)
-    print(page_text.rich_text[0].annotations.color)
-    print(page_text.id)
-    print(page_text.type)
-    print(page_text.rich_text[0].href)
-    print(page_text.rich_text[0].type)
+    page_text = pursePageTitle(db_query_res.results[0].properties["userid"])
+    page_title = pursePageText(db_query_res.results[0].properties["活動報告"])
