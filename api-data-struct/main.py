@@ -1,4 +1,8 @@
+#!/usr/bin/env python3
+
 import os
+import sys
+
 from dotenv import load_dotenv
 from rich import print
 
@@ -6,11 +10,13 @@ import dataclasses
 from notion_client import Client
 from time import sleep
 
-# 実装した構造化スクリプト
-import notion_st
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../api-data-struct")
 
 if __name__ == "__main__":
-    database_id = "10f2085cf70a4c939b2710e883eb161a"
+    # 実装した構造化スクリプト
+    import notion_st
+
+    database_id = "01be2b6ddec849d199e6c4f555accc98"
 
     # 秘密情報をロード
     load_dotenv()
@@ -37,13 +43,10 @@ if __name__ == "__main__":
 
     response_dict = notion.databases.query(**{"database_id": database_id})
     db_query_res = notion_st.purseDbQueryRes(response_dict)
-    results = db_query_res.results
+    print(db_query_res.results[0].properties)
 
-    page_text = notion_st.pursePageText(results[0].properties["テキストヘッダー"])
-    page_title = notion_st.pursePageTitle(results[0].properties["タイトルヘッダー"])
+    page_text = notion_st.pursePageTitle(db_query_res.results[0].properties["userid"])
+    page_title = notion_st.pursePageText(db_query_res.results[0].properties["活動報告"])
+    page_multi_select = notion_st.pursePageMultiSelect(db_query_res.results[0].properties["タグ"])
 
-    page_property = notion_st.pursePagePropaty(results[1].properties["テキストヘッダー"])
-    print(page_property.rich_text[0].text.content)
-
-    print(page_text.id, page_text.type, page_text.rich_text[0].annotations.color)
-    print(page_title.id, page_title.title[0].plain_text, page_title.type)
+    print(page_multi_select.multi_select[0].color)

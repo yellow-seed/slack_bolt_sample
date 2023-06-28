@@ -62,6 +62,14 @@ class RichText_ST:
     type: str = "text"
 
 
+# https://developers.notion.com/reference/page-property-values#select
+@dataclasses.dataclass(frozen=True)
+class Select_ST:
+    name: str
+    id: str = "undefined"
+    color: Color_Const = Color_Const.default
+
+
 # https://developers.notion.com/reference/user#all-users (type)
 # 定数であることを_Constで表現している。
 # もっと良い方法があれば教えてください。
@@ -111,6 +119,16 @@ class PageTitle_ST:
 @dataclasses.dataclass(frozen=True)
 class PageUrl_ST:
     url: str
+    type: str = "url"
+    id: str = "undefined"
+
+
+# https://developers.notion.com/reference/page-property-values#multi-select
+@dataclasses.dataclass(frozen=True)
+class PageMultiSelect_ST:
+    multi_select: list[Select_ST]
+    type: str = "multi_select"
+    id: str = "undefined"
 
 
 # ここから下はParentの要素
@@ -213,7 +231,37 @@ def pursePagePropaty(purse_target: dict) -> PageText_ST | PageTitle_ST | PageUrl
         ret = pursePageText(purse_target)
     elif "url" == purse_target["type"]:
         ret = pursePageUrl(purse_target)
+    elif "multi_select" == purse_target["type"]:
+        ret = pursePageMultiSelect(purse_target)
 
+    return ret
+
+
+def pursePageMultiSelect(purse_target: dict) -> PageMultiSelect_ST:
+    """
+    Multi Select型のNotionデータをパースして出力する
+    参照: https://developers.notion.com/reference/page-property-values#multi-select
+
+    Args:
+        purse_target (dict): Notionのデータ。辞書形式(JSON)
+
+    Returns:
+        PageTitle_ST: パース結果
+    """
+    # 辞書からクラスに戻す時はアンパックを使う
+    page_multi_select = PageMultiSelect_ST(**purse_target)
+
+    # API仕様を見るとField:optionsはOptionsが配列になっていることが分かる
+    page_options = []
+    for option_elem in page_multi_select.multi_select:
+        page_options.append(Select_ST(**option_elem))
+
+    # アンパックした要素をデータ構造に当てはめる
+    ret = PageMultiSelect_ST(
+        id=page_multi_select.id,
+        type=page_multi_select.type,
+        multi_select=page_options,
+    )
     return ret
 
 
@@ -383,3 +431,6 @@ if __name__ == "__main__":
 
     page_text = pursePageTitle(db_query_res.results[0].properties["userid"])
     page_title = pursePageText(db_query_res.results[0].properties["活動報告"])
+    page_multi_select = pursePageMultiSelect(db_query_res.results[0].properties["タグ"])
+
+    print(page_multi_select.multi_select[0].color)
