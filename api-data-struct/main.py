@@ -23,21 +23,44 @@ if __name__ == "__main__":
     api_key = os.environ.get("NOTION_API_KEY")
     notion = Client(auth=api_key)
 
-    db_parent = notion_st.DbParent_ST(database_id)
-    page_title = notion_st.PageTitle_ST(
-        [
-            notion_st.RichText_ST(text=notion_st.Text_ST("タイトル名")),
-        ]
+    create_page = notion_st.CreatePageInDb_ST(
+        parent=notion_st.DbParent_ST(database_id),
+        properties={  # ここはNotionの表によって変わるので、補助が出せない…
+            "userid": notion_st.PageTitle_ST(
+                [
+                    notion_st.RichText_ST(
+                        notion_st.Text_ST("abcdefg"),
+                        notion_st.PageAnnotations_ST(italic=True, color=notion_st.Color_Const.purple_background),
+                    )
+                ]
+            ),
+            "活動報告": notion_st.PageText_ST(
+                [
+                    notion_st.RichText_ST(
+                        notion_st.Text_ST("5Q-11"),
+                        notion_st.PageAnnotations_ST(italic=True, color=notion_st.Color_Const.purple_background),
+                    )
+                ]
+            ),
+            # "タグ": notion_st.PageMultiSelect_ST(
+            #     [
+            #         notion_st.NewSelect_ST(
+            #             name="新規",
+            #             color=notion_st.Color_Const.orange,
+            #         )
+            #     ]
+            # ),
+            "内容": notion_st.PageText_ST(
+                [
+                    notion_st.RichText_ST(
+                        notion_st.Text_ST("投稿テスト"),
+                    )
+                ]
+            ),
+        },
     )
-    page_text = notion_st.PageText_ST(
-        [
-            notion_st.RichText_ST(plain_text="テキストテスト", text=notion_st.Text_ST("テキストテスト"), annotations=notion_st.PageAnnotations_ST(color=notion_st.Color_Const.red_background)),
-        ]
-    )
-
-    create_page = notion_st.CreatePageInDb_ST(db_parent, {"タイトルヘッダー": page_title, "テキストヘッダー": page_text})  # ここはNotionの表によって変わるので、補助が出せない…
     post_data = dataclasses.asdict(create_page)
-    # notion.pages.create(**post_data)
+    notion.pages.create(**post_data)
 
     sleep(1)
 
@@ -49,4 +72,4 @@ if __name__ == "__main__":
     page_title = notion_st.pursePageText(db_query_res.results[0].properties["活動報告"])
     page_multi_select = notion_st.pursePageMultiSelect(db_query_res.results[0].properties["タグ"])
 
-    print(page_multi_select.multi_select[0].color)
+    print(page_multi_select.multi_select[0].name, page_multi_select.multi_select[0].id, page_multi_select.multi_select[0].color)
