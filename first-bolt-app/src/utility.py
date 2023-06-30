@@ -1,6 +1,6 @@
-
 from typing import Any, Dict, List, Union
 
+import tiktoken
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.schema import AgentAction
 
@@ -31,9 +31,7 @@ class SlackCallbackHandler(BaseCallbackHandler):
         self.token_count = 0
         self.content = []
 
-    def on_llm_start(
-        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
-    ) -> Any:
+    def on_llm_start(self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any) -> Any:
         pass
 
     def on_llm_new_token(self, token: str, **kwargs: Any) -> Any:
@@ -42,24 +40,24 @@ class SlackCallbackHandler(BaseCallbackHandler):
             self.content.append(token)
         else:
             self.token_count = 0
-            print(''.join(self.content))
-            self.say(''.join(self.content))
+            print("".join(self.content))
+            self.say("".join(self.content))
             self.content = []
 
-    def on_llm_error(
-        self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
-    ) -> Any:
+    def on_llm_error(self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any) -> Any:
         """Run when LLM errors."""
 
-    def on_chain_start(
-        self, serialized: Dict[str, Any], inputs: Dict[str, Any], **kwargs: Any
-    ) -> Any:
+    def on_chain_start(self, serialized: Dict[str, Any], inputs: Dict[str, Any], **kwargs: Any) -> Any:
         print(f"on_chain_start {serialized['name']}")
 
-    def on_tool_start(
-        self, serialized: Dict[str, Any], input_str: str, **kwargs: Any
-    ) -> Any:
+    def on_tool_start(self, serialized: Dict[str, Any], input_str: str, **kwargs: Any) -> Any:
         print(f"on_tool_start {serialized['name']}")
 
     def on_agent_action(self, action: AgentAction, **kwargs: Any) -> Any:
         print(f"on_agent_action {action}")
+
+
+def num_tokens(text: str, model: str) -> int:
+    """Return the number of tokens in a string."""
+    encoding = tiktoken.encoding_for_model(model)
+    return len(encoding.encode(text))
