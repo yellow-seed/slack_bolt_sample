@@ -9,6 +9,7 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 import slack_event_st
+import slack_block_st
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../api-data-struct")
 
@@ -22,6 +23,9 @@ class SlackAppController(object):
             print("message handler")
             body_st = slack_event_st.purseEventMessageCB(body)
             print(body_st.event)
+
+            blocks_dict = slack_block_st.bulidBlocks()
+            say(**blocks_dict)
 
         @slack_app.event(slack_event_st.EventType_Const.reaction_added)
         def reactionAddedHandler(body, say):

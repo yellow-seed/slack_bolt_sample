@@ -58,7 +58,7 @@ class EventMessage_ST:
     type: str = EventType_Const.message
     subtype: str = None
     text: str = None
-    blocks: dict = None  # TODO
+    blocks: list[dict] = None
     team: str = None
     channel: str = None
     channel_type: str = None
