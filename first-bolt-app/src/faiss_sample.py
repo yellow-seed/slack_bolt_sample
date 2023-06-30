@@ -1,9 +1,14 @@
+import os
+
 import faiss
 import numpy as np
+import openai
+from dotenv import load_dotenv
 from openai import Embedding
 from openai.embeddings_utils import get_embedding
-from utility import num_tokens
 
+load_dotenv()
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 class Test:
     def __init__(self):

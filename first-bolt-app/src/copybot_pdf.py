@@ -16,7 +16,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.prompts.chat import (ChatPromptTemplate,
                                     HumanMessagePromptTemplate,
                                     SystemMessagePromptTemplate)
-from openai.embeddings_utils import cosine_similarity, get_embedding
+from openai.embeddings_utils import get_embedding
 from pdfminer.high_level import extract_pages, extract_text
 from pdfminer.layout import LTTextContainer
 from pdfminer.pdfparser import PDFSyntaxError
