@@ -16,3 +16,5 @@ pdfminer.six
 rich
 flask
 notion_client
+feat_copybot_PDF
+PyGithub

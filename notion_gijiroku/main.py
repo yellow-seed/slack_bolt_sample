@@ -1,4 +1,7 @@
 import os
+
+import notion
+
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from dotenv import load_dotenv
@@ -56,19 +59,20 @@ chain = LLMChain(llm=llm, prompt=chat_prompt)
 # def message_hello(message, say):
 #     # イベントがトリガーされたチャンネルへ say() でメッセージを送信します
 #     say(f"Hey there <@{message['user']}>!")
-ym_select = {"2023年5月": "2023-06-10", "2023年6月": "2023-06-07", "2023年7月": "2023-06-05"}
+ym_select = {"2023年5月": "2023-05", "2023年6月": "2023-06", "2023年7月": "2023-07"}
 
 options = []
 for k, v in ym_select.items():
     options.append({"text": {"type": "plain_text", "text": k}, "value": v})
 
+ym_select = notion.Gijiroku().gijiroku_list()
 select_block = [
     {
         "type": "section",
-        "block_id": "section678",
-        "text": {"type": "mrkdwn", "text": "Pick an item from the dropdown list"},
+        "block_id": "monthly_select",
+        "text": {"type": "mrkdwn", "text": "どの月のマンスリーレビューをまとめますか？"},
         "accessory": {
-            "action_id": "text1234",
+            "action_id": "monthly_select_option",
             "type": "static_select",
             "placeholder": {"type": "plain_text", "text": "Select an item"},
             "options": options,
@@ -78,13 +82,54 @@ select_block = [
 
 
 @app.event("app_mention")
-def command_handler(body, say):
+def mention_handler(body, say):
     # メンションの内容を取得
     mention_text = body["event"]["text"]
     if "マンスリーレビューをまとめてください" in mention_text:
         say(blocks=select_block)
+        # セレクトボックスを出したら終了
+        return
+    elif "Notionの議事録をまとめてください" in mention_text:
+        say(blocks=notion.Gijiroku().gijiroku_select_block())
+        return
     # LLMを動作させてチャンネルで発言
     say(chain.run(text=mention_text))
+
+
+@app.action("gijiroku_select_option")
+def action_button_click(body, ack, say):
+    # アクションを確認したことを即時で応答します
+    ack()
+    # セレクトボックスで選択した値を取得
+    selected = body["state"]["values"]["gijiroku_select"]["gijiroku_select_option"]["selected_option"]["text"]["text"]
+    say(text=selected + "の議事録を取得しています。")
+
+    # 議事録取得
+    raw_gijiroku = notion.Gijiroku().gijiroku_contents(selected)
+    if not raw_gijiroku:
+        say(text="議事録が取得できませんでした。対象月を変更してください。")
+        return
+
+    msg = f"""
+    Notionから取得した議事録の内容はこちらです。
+    =============================================
+    {raw_gijiroku}
+    =============================================
+    """
+    say(text=msg)
+
+    say(text="議事録の内容をまとめています。")
+
+    # chatGPTに投げるメッセージ
+    gpt_text = f"""
+    次の文章を要約してください。
+    ----------------------------------
+    {raw_gijiroku}
+    """
+    # チャンネルにメッセージを投稿します
+    output = chain.run(text=gpt_text)
+    say(text=f"======================== {selected}の議事録の要約 ========================")
+    say(output)
 
 
 # アプリを起動します
