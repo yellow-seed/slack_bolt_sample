@@ -38,10 +38,3 @@ services:
 networks:
     ngrok-net:
       name: ngrok
-        
-    # ngrok:
-    #     image: wernight/ngrok
-    #     depends_on:
-    #       - my_app
-    #     environment:
-    #       - NGROK_PORT=my_app:11111
