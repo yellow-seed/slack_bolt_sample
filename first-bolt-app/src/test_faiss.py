@@ -1,8 +1,10 @@
 import os
+import sys
 
-import faiss
 import numpy as np
 import openai
+import pandas as pd
+from copybot_pdf import CoPyBotPDF
 from dotenv import load_dotenv
 from openai import Embedding
 from openai.embeddings_utils import get_embedding
@@ -10,8 +12,13 @@ from openai.embeddings_utils import get_embedding
 load_dotenv()
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
-class Test:
-    def __init__(self):
+
+class Test(CoPyBotPDF):
+    def test(self):
+        """
+        CoPyBotPDFクラスを継承して動作確認用のメソッドを定義
+        """
+        # 検索対象となるテキスト群を定義（ChatGPTで適当に生成した文章群）
         self.target_texts = [
             "今日は雨森雅司に賽振られたねえ",
             "小泉今日子は雨後の筍喰えるかな",
@@ -90,69 +97,31 @@ class Test:
             "バスケットは高速なゲームだね",
             "エクアドルは赤道が通るよ"] * 3
 
+        # 検索対象となるテキスト群をベクトル化
         response = Embedding.create(input=self.target_texts,
                                     model="text-embedding-ada-002")
         # 色んなプロパティを含んでいるresponseの中から、ベクトル表現のみを取り出したリストを作る
         self.embedding = [record["embedding"] for record in response["data"]]
+        # ベクトルのnumpy配列を作成（動作確認を行うメソッドで必要）
         self.embedding_array = np.array(self.embedding).astype("float32")
-
-
-    def init_voronoi_indexer(self):
-        """
-        クラスタリングによってデータ空間をボロノイ領域に分割することにより
-        高速な近傍探索を可能にするためのindexerを初期化するメソッド
-        ボロノイ領域の紹介はこちら --> https://ja.wikipedia.org/?curid=91418
-        このアルゴリズムでは質問クエリに対して、その周辺領域のみで探索できるので
-        総当たりせずに済むので探索にかかる時間を大幅に短縮できる
-        """
-
-        # 30ページを超える分量の多いPDFファイルに適用
-        n_pages = len(self.embedding_array)
-        if n_pages > 30:
-            # ボロノイ領域の数
-            # クラスタリング空間を定義する量子化器（Quantizer）つくる（L2ノルム）
-            self.quantizer = faiss.IndexFlatL2(1536)
-            # 下記引数の1536はembeddingの次元数、20はボロノイ領域の数（ボロノイの数は増やすと精度上がって処理時間増えるトレードオフ）
-            # embeddingの次元数は`text-embedding-ada-002`以外を使う場合には変更が必要。BERT-baseなら768次元など。
-            self.indexer = faiss.IndexIVFFlat(self.quantizer, 1536, 5)
-            # ベクトルデータベースからボロノイ領域を生成
-            self.indexer.train(self.embedding_array)
-            # ボロノイ領域にデータを追加
-            self.indexer.add(self.embedding_array)
-        else:
-            # 分量の少ないテキストデータに対しては総当たり探索でも問題ないので
-            # 単体のL2ノルムアルゴリズムを使う。
-            self.indexer = faiss.IndexFlatL2(1536)
-            # データを追加
-            self.indexer.add(self.embedding_array)
-
-    def voronoi_diagram_search(self, query_embedding):
-        """
-        ボロノイ領域による近傍探索を実行するメソッド
-
-        Args:
-            query_embedding (np.ndarray): 質問クエリをembeddingしたやつ
-
-        Returns:
-            top_n_pages (pandas.DataFrame): 上位n件のテキスト情報を格納したデータフレーム
-        """
-        # 近傍探索の実行。
-        query_embedding = np.array([query_embedding]).astype("float32")
-        _, idx = self.indexer.search(query_embedding, 3)
-        return self.target_texts[idx[0][0]]
-
-    def answer_about_pdf(self, query):
-        # query文字列とそのembedding
-        query_embedding = get_embedding(query, engine="text-embedding-ada-002")
-
-        # ボロノイ探索を実行。上位3件のテキストを取得
-        self.init_voronoi_indexer()
-        result = self.voronoi_diagram_search(query_embedding)
-        return result
+        # 検索対象となるテキスト群のDataFrameを作成（動作確認を行うメソッドで必要）
+        self.pages_df = pd.DataFrame(self.target_texts, columns=["text"])
 
 
 if __name__ == "__main__":
     query = "今日は雨振らんくてよかったねえ"
+    query_embedding = get_embedding(query, engine="text-embedding-ada-002")
+
+    # CoPyBotPDFを継承したTestクラスを作成
     test = Test()
-    result = test.answer_about_pdf(query)
-    print(result)
+
+    # 動作確認用のインスタンス変数を作成
+    test.test()
+
+    """以下で今回のプルリクで新たに実装したメソッドを実行"""
+
+    # ボロノイ探索のためのindexerを初期化
+    test.init_voronoi_indexer()
+    # ボロノイ探索を実行。上位3件のテキストを取得
+    top_n_pages = test.voronoi_diagram_search(query_embedding)
+    print(top_n_pages.iloc[0, 0])
