@@ -1,0 +1,40 @@
+version: '3'
+services:
+    my_app:
+        build: 
+            context: .
+            dockerfile: Dockerfile_dev
+        volumes:
+            - .:/my_app
+        environment:
+            # - PORT=11111
+            - PYTHONUNBUFFERED=True
+        ports:
+            - 11111:11111
+        env_file:
+            - .env
+        networks:
+            - ngrok-net
+
+    ngrok:
+        image: ngrok/ngrok:latest
+        depends_on:
+          - my_app
+        restart: unless-stopped
+        command:
+          - "start"
+          - "--all"
+          - "--config"
+          - "/etc/ngrok.yml"
+          # - "http"
+          # - "my_app:11111"
+        volumes:
+          - ./ngrok.yml:/etc/ngrok.yml
+        ports:
+          - 4040:4040
+        networks:
+          - ngrok-net
+
+networks:
+    ngrok-net:
+      name: ngrok

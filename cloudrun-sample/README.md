@@ -2,10 +2,10 @@
 ## 前準備
 
 ### ngrok
-ngrokでサーバーを立ち上げて `https://xxxx-xxxx-xxx-xxx-xxx.ngrok-free.app -> http://localhost:3000` となるようにする
+ngrokでサーバーを立ち上げて `https://xxxx-xxxx-xxx-xxx-xxx.ngrok-free.app -> http://localhost:11111` となるようにする
 
 ```
-ngrok http 3000
+ngrok http 11111
 ```
 
 ↓ngrokで生成されたURLをSlackアプリのevent-subscriptionsに登録する必要がある
@@ -28,6 +28,21 @@ python main.py
 ## dockerで立ち上げる場合
 docker build -t my_app -f Dockerfile_dev .
 docker run -p 11111:11111 --env-file .env  my_app
+
+## docker-composeで立ち上げる場合
+
+### 事前準備
+
+1. ngrok.yml.sampleをもとにngrok.ymlを作成する
+1. ngrok(https://dashboard.ngrok.com/get-started/your-authtoken)にログインしてYour Authtokenをコピーしてngrok.ymlのauthtokenに設定する
+
+### 起動方法
+
+1. カレントディレクトリがcloudrun-sampleなことを確認して `docker compose up` で起動する
+1. slackのevent-subscriptionsにngrokで生成されたURLを登録する必要があるので、ngrokが発行したURLが確認できるページ(http://localhost:4040/)をブラウザで開く
+1. SlackのEvent Subscriptionに{表示されているURL}/slack/eventsを登録する
+1. 以降の流れは通常のngrok使用時と変わらない
+1. 起動したサービスを終了する際はcontrol + cで終了できる
 
 
 ## CloudRun
