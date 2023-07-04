@@ -330,3 +330,13 @@ class DatePickerBuilder(object):
     @property
     def section_block_build(self) -> dict:
         return slackStructAsDict(self._section_block_build)
+
+
+if __name__ == "__main__":
+    builder = DatePickerBuilder()
+    input_blocks_dict = builder.input_block_build
+    section_block_dict = builder.section_block_build
+
+    # 出力結果を https://app.slack.com/block-kit-builder/ に貼り付ける
+    # print('{ "blocks": ', input_blocks_dict["blocks"], "}")
+    print('{ "blocks": ', section_block_dict["blocks"], "}")
