@@ -336,14 +336,14 @@ def pursePageTitle(purse_target: dict) -> PageTitle_ST:
 
 def pursePageUrl(purse_target: dict) -> PageUrl_ST:
     """
-    Title型のNotionデータをパースして出力する
+    Url型のNotionデータをパースして出力する
     参照: https://developers.notion.com/reference/page-property-values#url
 
     Args:
         purse_target (dict): Notionのデータ。辞書形式(JSON)
 
     Returns:
-        PageTitle_ST: パース結果
+        PageUrl_ST: パース結果
     """
     # 辞書からクラスに戻す時はアンパックを使う
     page_url = PageUrl_ST(**purse_target)
