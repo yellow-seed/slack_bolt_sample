@@ -147,10 +147,13 @@ class EventReactionRemoved_ST:
 class EventAppMention_ST:
     user: str
     text: str
+    team: str
     channel: str
     ts: str
     event_ts: str
     type: str = EventType_Const.app_mention
+    client_msg_id: str = None
+    blocks: dict = None
 
 
 # Event Callbackで得たデータ構造
@@ -176,8 +179,6 @@ class __EventCB_ST:
 class EventMessageCB_ST:
     token: str
     team_id: str
-    context_team_id: str
-    context_enterprise_id: str
     api_app_id: str
     event: EventMessage_ST | EventMsgDelete_ST
     type: str
@@ -186,6 +187,8 @@ class EventMessageCB_ST:
     authorizations: list[Authorization_ST]
     is_ext_shared_channel: bool
     event_context: str
+    context_team_id: str = None
+    context_enterprise_id: str = None
 
 
 # https://api.slack.com/apis/connections/events-api#callback-field

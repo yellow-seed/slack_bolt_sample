@@ -24,14 +24,20 @@ class SlackAppController(object):
             body_st = slack_event_st.purseEventMessageCB(body)
             print(body_st.event)
 
-            blocks_dict = slack_block_st.bulidBlocks()
+            builder = slack_block_st.HelloBuilder(say_text="元気にしてましたか?")
+            blocks_dict = builder.hello_build
             say(**blocks_dict)
 
+        # Reactionすると日付選択が出てくる
         @slack_app.event(slack_event_st.EventType_Const.reaction_added)
         def reactionAddedHandler(body, say):
             print("reaction added handler")
             body_st = slack_event_st.purseEventReactionAddedCB(body)
             print(body_st.event)
+
+            builder = slack_block_st.DatePickerBuilder()
+            blocks_dict = builder.input_block_build
+            say(**blocks_dict)
 
         @slack_app.event(slack_event_st.EventType_Const.reaction_removed)
         def reactionRemovedHandler(body, say):
@@ -39,11 +45,23 @@ class SlackAppController(object):
             body_st = slack_event_st.purseEventReactionRemovedCB(body)
             print(body_st.event)
 
+            builder = slack_block_st.DatePickerBuilder()
+            blocks_dict = builder.section_block_build
+            say(**blocks_dict)
+
         @slack_app.event(slack_event_st.EventType_Const.app_mention)
         def AppMentionHandler(body, say):
             print("app mention handler")
+            print(body)
             body_st = slack_event_st.purseEventAppMentionCB(body)
             print(body_st.event)
+
+        # 日付選択すると下記が呼ばれる
+        @slack_app.action("datepicker_01")
+        def dataPicker01Handler(ack, body, logger):
+            print("data picker 01 handler")
+            ack()
+            print(body["type"], body["actions"][0]["selected_date"])
 
     def startSocketMode(self):
         self.handler.start()
