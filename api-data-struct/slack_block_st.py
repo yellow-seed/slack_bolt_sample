@@ -243,6 +243,8 @@ def __deleteNoneKey(slack_dict: dict) -> dict:
 def slackStructAsDict(blocks: Blocks_ST) -> dict:
     """
     slack blockの構造体をdictに変換する
+    Noneの要素をSlack APIに投げるとErrorになってしまうので、削除する
+    そのために__deleteNoneKey()を再帰的に呼び出している。
 
     Args:
         blocks (Blocks_ST): slack blockの構造体
@@ -252,24 +254,6 @@ def slackStructAsDict(blocks: Blocks_ST) -> dict:
     """
     blocks_dict = dataclasses.asdict(blocks)
     blocks_dict = __deleteNoneKey(blocks_dict)
-
-    return blocks_dict
-
-
-def bulidBlocks(summery_text="first saying", text="Hello, world!") -> dict:
-    blocks = Blocks_ST(
-        [
-            SectionBlock_ST(
-                text=Compo_Text_ST(
-                    type=Compo_TextType_Const.plain_text,
-                    text=text,
-                )
-            )
-        ],
-        text=summery_text,
-    )
-    blocks_dict = slackStructAsDict(blocks)
-    print(blocks_dict)
 
     return blocks_dict
 
@@ -299,8 +283,11 @@ class HelloBuilder(object):
 
 class DatePickerBuilder(object):
     def __init__(self) -> None:
+        """
+        Dateを選択するブロックを作成する。
+        """
         # Elementを定義
-        data_picker_elem = Elem_DatePicker_ST(
+        date_picker_elem = Elem_DatePicker_ST(
             action_id="datepicker_01",  # action_idの値でHandlingしている。このIDの場合、@slack_app.action("datepicker_01")で捕まえられる。
             placeholder=Compo_Text_ST(type=Compo_TextType_Const.plain_text, text="日付選択"),
         )
@@ -310,13 +297,13 @@ class DatePickerBuilder(object):
 
         data_in_input_block = InputBlock_ST(
             label=Compo_Text_ST(type=Compo_TextType_Const.plain_text, text="日付"),
-            element=data_picker_elem,
+            element=date_picker_elem,
             hint=Compo_Text_ST(type=Compo_TextType_Const.plain_text, text="ヒントは出せない"),
         )
 
         data_in_section_block = SectionBlock_ST(
             text=Compo_Text_ST(type=Compo_TextType_Const.plain_text, text="日付選択Section"),
-            accessory=data_picker_elem,
+            accessory=date_picker_elem,
         )
 
         # Blockリストを定義
