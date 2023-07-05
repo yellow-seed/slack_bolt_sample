@@ -17,3 +17,4 @@ rich
 flask
 notion_client
 PyGithub
+gunicorn>=20
