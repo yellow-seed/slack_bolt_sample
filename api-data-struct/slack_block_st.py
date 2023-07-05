@@ -271,7 +271,7 @@ class HelloBuilder(object):
         """
         # Block要素でBlockを定義
         hello_in_section_block = SectionBlock_ST(text=Compo_Text_ST(type=Compo_TextType_Const.plain_text, text="Hello!!!"))
-        text_in_section_block = SectionBlock_ST(text=Compo_Text_ST(type=Compo_TextType_Const.plain_text, text=say_text))
+        text_in_section_block = SectionBlock_ST(text=Compo_Text_ST(type=Compo_TextType_Const.plain_text, text=say_text), accessory=Elem_Image_ST())
 
         # Blockリストを定義
         self._hello_build = Blocks_ST([hello_in_section_block, text_in_section_block], text=notify_text)

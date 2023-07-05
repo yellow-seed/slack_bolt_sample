@@ -24,7 +24,7 @@ class SlackAppController(object):
             body_st = slack_event_st.purseEventMessageCB(body)
             print(body_st.event)
 
-            builder = slack_block_st.HelloBuilder(say_text="元気にしてましたか?")
+            builder = slack_block_st.HelloBuilder(say_text="元気にしてましたか? >")
             blocks_dict = builder.hello_build
             say(**blocks_dict)
 
@@ -61,7 +61,7 @@ class SlackAppController(object):
         def dataPicker01Handler(ack, body, logger):
             print("data picker 01 handler")
             ack()
-            print(body["type"], body["actions"][0]["selected_date"])
+            print(body["type"], body["actions"][0]["selected_date"])  # ここは力尽きたので、パースしていない
 
     def startSocketMode(self):
         self.handler.start()
