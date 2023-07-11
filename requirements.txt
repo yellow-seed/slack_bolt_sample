@@ -18,3 +18,4 @@ flask
 notion_client
 PyGithub
 arxiv
+gunicorn>=20
