@@ -41,12 +41,12 @@ class SlackToken(object):
             env_config.set("Env", "SLACK_CONF_TOKEN", self.config)
             env_config.set("Env", "SLACK_CONF_REFRESH_TOKEN", self.refresh)
 
-            # 実際のINIファイルに反映させる
+            # 実際の.envファイルに反映させる
             with open("./.env", "w") as f:
                 env_config.write(f)
 
             # 環境変数を更新する
-            print("Config Token & Refresg Token is updated in .evn file。\nDev ContainerをRebuildしてください。")
+            print("Config Token & Refresg Token is updated in .evn file.\nDev ContainerをRebuildしてください。")
 
         else:
             print(response.json())
